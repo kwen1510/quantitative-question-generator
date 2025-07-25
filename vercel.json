@@ -3,8 +3,7 @@
   "name": "chemcalc-pro",
   "builds": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
+      "src": "server.js"
     }
   ],
   "routes": [
