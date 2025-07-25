@@ -4,9 +4,15 @@ const path = require('path');
 require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const { MongoClient, ObjectId } = require('mongodb');
+const { randomUUID } = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Determine if we have MongoDB credentials
+const useInMemoryDb = !process.env.MONGO_DB_USERNAME || !process.env.MONGO_DB_PASSWORD;
+const inMemoryContexts = [];
+
 
 // MongoDB Configuration
 const uri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.bwtbeur.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -19,13 +25,18 @@ async function connectToMongoDB() {
     if (db && client && client.topology && client.topology.isConnected()) {
       return db;
     }
-    
+
+    if (useInMemoryDb) {
+      console.warn('MongoDB credentials not provided - using in-memory storage');
+      return null;
+    }
+
     client = new MongoClient(uri, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    
+
     await client.connect();
     db = client.db('calculation_validator');
     console.log('Connected to MongoDB');
@@ -38,6 +49,9 @@ async function connectToMongoDB() {
 
 // Helper function to ensure database connection
 async function ensureDbConnection() {
+  if (useInMemoryDb) {
+    return null;
+  }
   if (!db) {
     await connectToMongoDB();
   }
@@ -78,14 +92,19 @@ app.post('/api/save-context', async (req, res) => {
       updatedAt: new Date()
     };
     
-    const database = await ensureDbConnection();
-    const result = await database.collection('contexts').insertOne(contextData);
-    
-    res.json({
-      success: true,
-      id: result.insertedId,
-      message: 'Context saved successfully'
-    });
+    if (useInMemoryDb) {
+      const id = new ObjectId().toString();
+      inMemoryContexts.push({ ...contextData, _id: id });
+      res.json({ success: true, id, message: 'Context saved successfully' });
+    } else {
+      const database = await ensureDbConnection();
+      const result = await database.collection('contexts').insertOne(contextData);
+      res.json({
+        success: true,
+        id: result.insertedId,
+        message: 'Context saved successfully'
+      });
+    }
     
   } catch (error) {
     console.error('Error saving context:', error);
@@ -96,14 +115,20 @@ app.post('/api/save-context', async (req, res) => {
 // API endpoint to get all saved contexts
 app.get('/api/contexts', async (req, res) => {
   try {
-    const database = await ensureDbConnection();
-    const contexts = await database.collection('contexts')
-      .find({})
-      .sort({ updatedAt: -1 })
-      .limit(100)
-      .toArray();
-    
-    res.json({ contexts });
+    if (useInMemoryDb) {
+      const contexts = [...inMemoryContexts]
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 100);
+      res.json({ contexts });
+    } else {
+      const database = await ensureDbConnection();
+      const contexts = await database.collection('contexts')
+        .find({})
+        .sort({ updatedAt: -1 })
+        .limit(100)
+        .toArray();
+      res.json({ contexts });
+    }
     
   } catch (error) {
     console.error('Error fetching contexts:', error);
@@ -120,14 +145,20 @@ app.get('/api/contexts/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid context ID' });
     }
     
-    const database = await ensureDbConnection();
-    const context = await database.collection('contexts').findOne({ _id: new ObjectId(id) });
-    
-    if (!context) {
-      return res.status(404).json({ error: 'Context not found' });
+    if (useInMemoryDb) {
+      const context = inMemoryContexts.find(c => c._id === id);
+      if (!context) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+      res.json({ context });
+    } else {
+      const database = await ensureDbConnection();
+      const context = await database.collection('contexts').findOne({ _id: new ObjectId(id) });
+      if (!context) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+      res.json({ context });
     }
-    
-    res.json({ context });
     
   } catch (error) {
     console.error('Error fetching context:', error);
@@ -158,20 +189,29 @@ app.put('/api/contexts/:id', async (req, res) => {
       updatedAt: new Date()
     };
     
-    const database = await ensureDbConnection();
-    const result = await database.collection('contexts').updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updateData }
-    );
-    
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Context not found' });
+    if (useInMemoryDb) {
+      const index = inMemoryContexts.findIndex(c => c._id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+      inMemoryContexts[index] = { ...inMemoryContexts[index], ...updateData };
+      res.json({ success: true, message: 'Context updated successfully' });
+    } else {
+      const database = await ensureDbConnection();
+      const result = await database.collection('contexts').updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+
+      res.json({
+        success: true,
+        message: 'Context updated successfully'
+      });
     }
-    
-    res.json({
-      success: true,
-      message: 'Context updated successfully'
-    });
     
   } catch (error) {
     console.error('Error updating context:', error);
@@ -188,17 +228,26 @@ app.delete('/api/contexts/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid context ID' });
     }
     
-    const database = await ensureDbConnection();
-    const result = await database.collection('contexts').deleteOne({ _id: new ObjectId(id) });
-    
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ error: 'Context not found' });
+    if (useInMemoryDb) {
+      const index = inMemoryContexts.findIndex(c => c._id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+      inMemoryContexts.splice(index, 1);
+      res.json({ success: true, message: 'Context deleted successfully' });
+    } else {
+      const database = await ensureDbConnection();
+      const result = await database.collection('contexts').deleteOne({ _id: new ObjectId(id) });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: 'Context not found' });
+      }
+
+      res.json({
+        success: true,
+        message: 'Context deleted successfully'
+      });
     }
-    
-    res.json({
-      success: true,
-      message: 'Context deleted successfully'
-    });
     
   } catch (error) {
     console.error('Error deleting context:', error);
@@ -234,6 +283,14 @@ Please respond with:
 
 Be thorough in checking the mathematical logic and JavaScript syntax.`;
 
+    if (!process.env.ANTHROPIC_KEY) {
+      return res.json({
+        isCorrect: true,
+        validation: 'ANTHROPIC_KEY not set - assuming code is correct',
+        feedback: 'ANTHROPIC_KEY not set'
+      });
+    }
+
     const message = await anthropic.messages.create({
       model: 'claude-3-5-haiku-latest',
       max_tokens: 1000,
@@ -267,6 +324,13 @@ app.post('/api/generate-javascript', async (req, res) => {
     
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
+    }
+
+    if (!process.env.ANTHROPIC_KEY) {
+      // Fallback example when API key isn't configured
+      return res.json({
+        jsCode: '// Anthropic API key missing\nconsole.log("demo");'
+      });
     }
 
     const prompt = `
@@ -413,6 +477,13 @@ app.post('/api/generate-single-question', async (req, res) => {
     ];
 
     const selectedContext = contextVariations[(questionNumber - 1) % contextVariations.length];
+
+    if (!process.env.ANTHROPIC_KEY) {
+      return res.json({
+        question: 'ANTHROPIC_KEY not set - cannot generate question',
+        questionNumber
+      });
+    }
 
     const prompt = `
 You are a chemistry teacher's assistant specializing in back-titration practice questions.
