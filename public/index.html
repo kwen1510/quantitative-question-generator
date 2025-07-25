@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemCalc Pro - AI-Powered Chemistry Question Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧮 ChemCalc Pro</h1>
+            <p>Professional AI-powered chemistry question generator with intelligent validation and context management</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Context Management Section -->
+            <div class="context-management-section">
+                <h2>📚 Context Management</h2>
+                <div class="context-controls">
+                    <button id="loadContextBtn" class="btn btn-secondary">📂 Load Saved Context</button>
+                    <button id="saveContextBtn" class="btn btn-secondary">💾 Save Current Context</button>
+                </div>
+                
+                <!-- Context List Modal -->
+                <div id="contextModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Saved Contexts</h3>
+                        <div class="context-list"></div>
+                    </div>
+                </div>
+                
+                <!-- Save Context Modal -->
+                <div id="saveContextModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Save Context</h3>
+                        <form id="saveContextForm">
+                            <input type="text" id="contextName" placeholder="Context Name" required>
+                            <textarea id="contextDescription" placeholder="Description (optional)" rows="3"></textarea>
+                            <input type="text" id="contextTags" placeholder="Tags (comma-separated)">
+                            <button type="submit" class="btn btn-primary">💾 Save Context</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="input-group">
+                    <label for="question">📝 Question:</label>
+                    <textarea id="question" placeholder="Enter your mathematical question here..." rows="8">A 3.00 g mixture of calcium carbonate and calcium chloride was added to 50.0 cm3 of 1.00 mol dm3 hydrochloric acid. The resulting solution was made up to 250 cm3 in a graduated flask with deionised water. When 25.0 cm3 of this solution was titrated with 0.100 mol dm3 sodium hydroxide solution,   21.05 cm3 of sodium hydroxide was required for complete reaction. 
+                        Calculate the percentage by mass of calcium carbonate in the given mixture.	
+                        
+                        _____
+                        
+                        Amount of NaOH reacted = ( )(0.100) = 2.105 x 10–3 mol
+                        
+                        HCl(aq)  +  NaOH(aq)    NaCl(aq)  +  H2O(l) 
+                        Amount of HCl that reacted with NaOH = 2.105 x 10–3 mol
+                        Amount of HCl in 250 cm3 of solution = ( )(2.105 x 10–3) = 2.105 x 10–2 mol
+                        
+                        Initial amount of HCl used = ( )(1.00) = 5.00 x 10–2 mol
+                        Amount of HCl that reacted with CaCO3 = 5.00 x 10–2 – 2.105 x 10–2 = 2.895 x 10–2 mol  
+                        
+                        CaCO3(s)  +  2HCl(aq)    CaCl2(aq)  +  CO2(g)  +  H2O(l)
+                        Amount of CaCO3 reacted = (½)(2.895 x 10–2) = 1.448 x 10–2 mol  
+                        
+                        Molar mass of CaCO3 = 40.1 + 12.0 + 3 x 16.0 = 100.1 g mol–1 
+                        Mass of CaCO3 = (1.448 x 10–2)(100.1) = 1.449 g 
+                        Hence percentage by mass of CaCO3 in the mixture = ( )(100%) = 48.3%</textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="context">⚙️ Additional Context:</label>
+                    <textarea id="context" placeholder="Enter any additional context or constraints..." rows="6">Use cm3 for volumes, mol dm-3 for concentrations, g for mass, mol for amount of substance, and g mol-1 for molar mass.
+                        Use 3.s.f for final answers, and 5.s.f for intermediate answers.
+                        Percentage by mass is a percentage, and it is a number between 20% and 80%.
+                        Please tweak the values slightly to make the calculation work.
+                        Please use the same chemicals and reactions as the original question, this is a back-titration question.
+                        Volumetric flask has a fixed volume of 250cm3.
+                        Pipette is used to take 25.0 cm3 of the solution.</textarea>
+                </div>
+
+                <div class="button-group">
+                    <button id="generateBtn" class="btn btn-primary">🔄 Generate & Validate Sample Question</button>
+                    <button id="startOverBtn" class="btn btn-secondary" style="display: none;">🔄 Start Over</button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="step-indicator">
+                    <div class="step" id="step1">1. Generate JavaScript Code</div>
+                    <div class="step" id="step2">2. Execute Calculation</div>
+                    <div class="step" id="step3">3. Validate with AI</div>
+                    <div class="step" id="step4">4. Generate Sample Question</div>
+                    <div class="step" id="step5">5. User Approval</div>
+                    <div class="step" id="step6">6. Generate 4 More Questions</div>
+                </div>
+
+                <div id="loadingIndicator" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Processing your calculation...</p>
+                </div>
+
+                <!-- Workflow Step 1 & 2: Code Generation & Execution -->
+                <div id="codeExecutionWorkflow" class="workflow-item hidden">
+                    <div class="side-by-side">
+                        <div id="codeSection" class="result-card">
+                            <h3>Generated JavaScript Code</h3>
+                            <div class="code-container">
+                                <pre id="generatedCode"></pre>
+                                <button id="runCodeBtn" class="btn btn-secondary hidden">Run Calculation</button>
+                            </div>
+                        </div>
+
+                        <div id="executionSection" class="result-card">
+                            <h3>Calculation Output</h3>
+                            <div id="codeOutput" class="output-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Step 3: Validation -->
+                <div id="validationWorkflow" class="workflow-item hidden">
+                    <div id="validationSection" class="result-card">
+                        <h3>AI Validation Results</h3>
+                        <div id="validationResult" class="validation-container"></div>
+                        <div id="retryInfo" class="retry-info hidden">
+                            <p>Attempt <span id="attemptNumber">1</span> of 3</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Step 4 & 5: Sample Question -->
+                <div id="sampleWorkflow" class="workflow-item hidden">
+                    <div id="sampleQuestionSection" class="result-card">
+                        <h3>🔍 Generated Sample Question</h3>
+                        <div id="sampleQuestion" class="question-container"></div>
+                        <div class="approval-buttons">
+                            <button id="approveBtn" class="btn btn-success">✅ Approve & Generate 4 More</button>
+                            <button id="regenerateBtn" class="btn btn-warning">🔄 Regenerate Sample</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workflow Step 6: Final Questions -->
+                <div id="finalWorkflow" class="workflow-item hidden">
+                    <div id="finalQuestionsSection" class="result-card">
+                        <h3>🎉 Generating Your 4 Questions</h3>
+                        
+                        <!-- Progress tracking for each question -->
+                        <div id="questionProgress" class="question-progress-container">
+                            <!-- Question 1 Progress -->
+                            <div id="question1Progress" class="question-progress-item">
+                                <h4>📄 Question 1</h4>
+                                <div class="progress-steps">
+                                    <div class="progress-step" id="q1-step-generate">📝 Generating...</div>
+                                    <div class="progress-step" id="q1-step-code">⚙️ Creating code...</div>
+                                    <div class="progress-step" id="q1-step-test">🧪 Testing values...</div>
+                                    <div class="progress-step" id="q1-step-complete">✅ Complete</div>
+                                </div>
+                                <div class="generated-question" id="question1Content" style="display: none;"></div>
+                            </div>
+                            
+                            <!-- Question 2 Progress -->
+                            <div id="question2Progress" class="question-progress-item">
+                                <h4>📄 Question 2</h4>
+                                <div class="progress-steps">
+                                    <div class="progress-step" id="q2-step-generate">📝 Generating...</div>
+                                    <div class="progress-step" id="q2-step-code">⚙️ Creating code...</div>
+                                    <div class="progress-step" id="q2-step-test">🧪 Testing values...</div>
+                                    <div class="progress-step" id="q2-step-complete">✅ Complete</div>
+                                </div>
+                                <div class="generated-question" id="question2Content" style="display: none;"></div>
+                            </div>
+                            
+                            <!-- Question 3 Progress -->
+                            <div id="question3Progress" class="question-progress-item">
+                                <h4>📄 Question 3</h4>
+                                <div class="progress-steps">
+                                    <div class="progress-step" id="q3-step-generate">📝 Generating...</div>
+                                    <div class="progress-step" id="q3-step-code">⚙️ Creating code...</div>
+                                    <div class="progress-step" id="q3-step-test">🧪 Testing values...</div>
+                                    <div class="progress-step" id="q3-step-complete">✅ Complete</div>
+                                </div>
+                                <div class="generated-question" id="question3Content" style="display: none;"></div>
+                            </div>
+                            
+                            <!-- Question 4 Progress -->
+                            <div id="question4Progress" class="question-progress-item">
+                                <h4>📄 Question 4</h4>
+                                <div class="progress-steps">
+                                    <div class="progress-step" id="q4-step-generate">📝 Generating...</div>
+                                    <div class="progress-step" id="q4-step-code">⚙️ Creating code...</div>
+                                    <div class="progress-step" id="q4-step-test">🧪 Testing values...</div>
+                                    <div class="progress-step" id="q4-step-complete">✅ Complete</div>
+                                </div>
+                                <div class="generated-question" id="question4Content" style="display: none;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Final completed questions display -->
+                        <div id="finalQuestions" class="questions-container" style="display: none;"></div>
+                        
+                        <div class="download-buttons" id="downloadButtons" style="display: none;">
+                            <button id="copyAllBtn" class="btn btn-secondary">📋 Copy All Questions</button>
+                            <button id="startOverBtn" class="btn btn-secondary">🔄 Start Over</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error/Final Result Section -->
+                <div id="finalResultWorkflow" class="workflow-item hidden">
+                    <div id="finalResult" class="result-card">
+                        <h3>Final Result</h3>
+                        <div id="finalOutput" class="final-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
