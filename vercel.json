@@ -3,15 +3,7 @@
   "name": "chemcalc-pro",
   "builds": [
     {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": "public/**"
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "src": "server.js"
     }
   ],
   "routes": [
@@ -20,15 +12,7 @@
       "dest": "/server.js"
     },
     {
-      "src": "/(app\\.js|styles\\.css|favicon\\.ico)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*)",
+      "src": "/",
       "dest": "/server.js"
     }
   ],
