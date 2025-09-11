@@ -1,0 +1,64 @@
+# Render Blueprint for Q&A Composer App
+# This file enables one-click deployment to Render
+# See: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: qa-composer
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: qa-composer
+          property: port
+      - key: MINI_PORT
+        fromService:
+          type: web
+          name: qa-composer
+          property: port
+      # Database Configuration
+      - key: MONGODB_URI
+        sync: false # Set this manually in Render dashboard
+      - key: MONGO_DB_NAME
+        value: calculation_validator
+      # Supabase Configuration  
+      - key: SUPABASE_URL
+        sync: false # Set this manually in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Set this manually in Render dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false # Set this manually in Render dashboard
+      # AI API Keys (at least one required)
+      - key: OPENAI_API_KEY
+        sync: false # Set this manually in Render dashboard
+      - key: GROQ_API_KEY
+        sync: false # Set this manually in Render dashboard
+      # Optional Configuration
+      - key: ALLOWED_EMAIL_DOMAINS
+        value: moe.edu.sg,ri.edu.sg
+      - key: SESSION_MAX_IDLE_MINUTES
+        value: 180
+      - key: OTP_RESEND_SECONDS
+        value: 60
+      - key: PARAM_MODEL
+        value: gpt-4.1
+      - key: PLAN_MODEL
+        value: o3
+      - key: QA_MODEL
+        value: groq
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+
+# Additional services can be added here if needed
+# For example, Redis for caching:
+# - type: redis
+#   name: qa-composer-redis
+#   plan: starter
+#   maxmemoryPolicy: allkeys-lru

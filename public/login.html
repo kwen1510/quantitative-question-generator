@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>Login - Question Cloning Tool</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --bg:#0b1220; --card:rgba(255,255,255,0.05); --text:#ffffff; --muted:#9ca3af; --border:rgba(255,255,255,0.1); --accent:#3b82f6; --accent-2:#1d4ed8; }
+    [data-theme="light"] { --bg:#f8fafc; --card:#ffffff; --text:#1e293b; --muted:#475569; --border:#e2e8f0; --accent:#2563eb; --accent-2:#1d4ed8; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    @media (min-width: 768px) {
+      body { padding: 24px; }
+    }
+    .login-card {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    @media (min-width: 768px) {
+      .login-card { padding: 32px; }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    input::placeholder {
+      color: var(--muted);
+      opacity: 0.6;
+    }
+    [data-theme="light"] input::placeholder {
+      color: #94a3b8;
+      opacity: 1;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .status {
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+    .status.success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .status.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .hidden { display: none; }
+    .timer { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .top-right { position: fixed; right: 16px; top: 16px; display: flex; gap: 8px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+    .icon { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="top-right">
+    <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="themeIconSvg" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path id="sunIcon" d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.64 5.64L4.22 4.22M19.78 19.78l-1.42-1.42M5.64 18.36L4.22 19.78M19.78 4.22l-1.42 1.42M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="login-card">
+    <h1>Question Cloning Tool</h1>
+    <p class="subtitle">Sign in to collaborate on question generation</p>
+    
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input id="email" type="email" placeholder="you@example.com" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="code">6-Digit Verification Code</label>
+      <input id="code" type="text" maxlength="6" placeholder="Enter code after sending OTP" disabled>
+    </div>
+    
+    <button id="sendOtp" class="btn btn-primary">Send Verification Code</button>
+    <div id="otpTimer" class="timer hidden">Resend in 60s</div>
+    <button id="verifyOtp" class="btn btn-secondary" disabled>Verify & Sign In</button>
+    
+    <div id="status" class="status hidden"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.3/dist/umd/supabase.min.js"></script>
+  <script>
+    let sb = null
+    let otpSent = false
+    let allowedDomains = []
+    let otpCountdown = null
+    let otpSecondsLeft = 0
+
+    // Initialize Supabase
+    async function init() {
+      try {
+        const SUPABASE_URL = '__SUPABASE_URL__'
+        const SUPABASE_ANON = '__SUPABASE_ANON__'
+        const DOMAINS = '__ALLOWED_DOMAINS__'
+        allowedDomains = (DOMAINS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+        if (!SUPABASE_URL || !SUPABASE_ANON) {
+          showStatus('Authentication not configured', 'error')
+          return
+        }
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+        
+        // Check if already authenticated, but verify token is valid
+        const { data, error } = await sb.auth.getSession()
+        if (data.session?.user && !error) {
+          // Verify the session is actually valid by making a test API call
+          try {
+            const testResponse = await fetch('/api/subjects', {
+              headers: { 'Authorization': 'Bearer ' + data.session.access_token }
+            })
+            if (testResponse.ok || testResponse.status !== 401) {
+              console.log('Valid session found, redirecting to main app')
+              window.location.href = '/'
+              return
+            } else {
+              console.log('Session token invalid, clearing and staying on login')
+              await sb.auth.signOut()
+            }
+          } catch (e) {
+            console.log('Session verification failed, staying on login page')
+            await sb.auth.signOut()
+          }
+        }
+      } catch (e) {
+        showStatus('Failed to initialize: ' + e.message, 'error')
+      }
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('status')
+      status.textContent = message
+      status.className = `status ${type}`
+      status.classList.remove('hidden')
+    }
+
+    function setLoading(isLoading, buttonId) {
+      const btn = document.getElementById(buttonId)
+      if (isLoading) {
+        btn.innerHTML = '<span class="spinner"></span>' + btn.textContent
+        btn.disabled = true
+      } else {
+        btn.innerHTML = btn.textContent.replace(/^.*?([A-Z])/, '$1')
+        btn.disabled = false
+      }
+    }
+
+    function startOtpCooldown(seconds = 60) {
+      try { if (otpCountdown) clearInterval(otpCountdown) } catch(_) {}
+      otpSecondsLeft = seconds
+      const sendBtn = document.getElementById('sendOtp')
+      const timer = document.getElementById('otpTimer')
+      sendBtn.style.display = 'none'
+      timer.classList.remove('hidden')
+      timer.textContent = `Resend in ${otpSecondsLeft}s`
+      otpCountdown = setInterval(() => {
+        otpSecondsLeft -= 1
+        if (otpSecondsLeft <= 0) {
+          clearInterval(otpCountdown)
+          timer.classList.add('hidden')
+          sendBtn.style.display = 'block'
+          sendBtn.textContent = 'Resend Verification Code'
+          sendBtn.disabled = false
+        } else {
+          timer.textContent = `Resend in ${otpSecondsLeft}s`
+        }
+      }, 1000)
+    }
+
+    function isAllowedDomain(email) {
+      const domain = (email.split('@')[1] || '').toLowerCase()
+      if (!allowedDomains.length) return true
+      return allowedDomains.includes(domain)
+    }
+
+    const sendOtpHandler = async () => {
+      const email = document.getElementById('email').value.trim()
+      if (!email) {
+        showStatus('Please enter your email address', 'error')
+        document.getElementById('email').focus()
+        return
+      }
+      if (!isAllowedDomain(email)) {
+        showStatus('This email domain is not allowed to sign in', 'error')
+        return
+      }
+
+      setLoading(true, 'sendOtp')
+      try {
+        const { error } = await sb.auth.signInWithOtp({ 
+          email, 
+          options: { shouldCreateUser: true }
+        })
+        if (error) throw error
+        
+        showStatus(`Verification code sent to ${email}`, 'success')
+        document.getElementById('code').disabled = false
+        document.getElementById('verifyOtp').disabled = false
+        // Auto-focus on OTP input for smooth UX
+        setTimeout(() => document.getElementById('code').focus(), 100)
+        otpSent = true
+        // Begin cooldown and hide the button
+        const cooldown = Number('__OTP_RESEND_SECONDS__') || 60
+        startOtpCooldown(cooldown)
+      } catch (err) {
+        showStatus('Failed to send code: ' + err.message, 'error')
+      } finally {
+        setLoading(false, 'sendOtp')
+      }
+    }
+
+    document.getElementById('verifyOtp').onclick = async () => {
+      const email = document.getElementById('email').value.trim()
+      const token = document.getElementById('code').value.trim()
+      
+      if (!email || !token || token.length !== 6) {
+        showStatus('Please enter email and 6-digit code', 'error')
+        return
+      }
+      if (!isAllowedDomain(email)) {
+        showStatus('This email domain is not allowed to sign in', 'error')
+        return
+      }
+
+      setLoading(true, 'verifyOtp')
+      try {
+        const { data, error } = await sb.auth.verifyOtp({ 
+          email, 
+          token, 
+          type: 'email' 
+        })
+        if (error) throw error
+        
+        showStatus('Success! Redirecting...', 'success')
+        setTimeout(() => window.location.href = '/', 1000)
+      } catch (err) {
+        showStatus('Verification failed: ' + err.message, 'error')
+      } finally {
+        setLoading(false, 'verifyOtp')
+      }
+    }
+
+    // Theme restore (safe to run immediately)
+    (function(){ try{ const t = localStorage.getItem('qct.theme'); if(t){ document.documentElement.setAttribute('data-theme', t) } } catch(_){} })()
+
+    // Wait for DOM to be ready before setting up event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Allow Enter key to submit with focus management
+      document.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          if (!otpSent) {
+            sendOtpHandler()
+          } else {
+            document.getElementById('verifyOtp').click()
+          }
+        }
+      })
+      
+      // Wire up click handler
+      document.getElementById('sendOtp').onclick = sendOtpHandler
+
+      // Theme toggle
+      document.getElementById('themeToggle').onclick = () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark'
+        const next = current === 'dark' ? 'light' : 'dark'
+        document.documentElement.setAttribute('data-theme', next)
+        try { localStorage.setItem('qct.theme', next) } catch(_) {}
+      }
+
+      // Initialize Supabase
+      init()
+    })
+  </script>
+</body>
+</html>

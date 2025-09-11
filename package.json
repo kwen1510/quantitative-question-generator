@@ -1,32 +1,29 @@
 {
-  "name": "chemistry-calculation-validator",
-  "version": "2.0.0",
-  "description": "Sophisticated chemistry calculation validator with AI-powered validation and context management",
+  "name": "minimal-qa-composer",
+  "version": "1.0.0",
+  "description": "Minimal AI-powered Q&A generator with hardcoded physics example",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "echo 'No build step required for this Node.js app'",
-    "vercel-build": "echo 'Build completed'",
-    "test": "echo 'No tests specified'",
-    "check-api-keys": "node scripts/check-api-keys.js",
-    "precommit": "npm run check-api-keys",
-    "vercel-dev": "vercel dev"
+    "dev": "nodemon server.js --watch server.js --watch public --ext js,html,css",
+    "start": "node server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "@anthropic-ai/sdk": "^0.20.0",
-    "mongodb": "^6.3.0"
+    "groq-sdk": "^0.3.1",
+    "mongodb": "^6.19.0",
+    "openai": "^4.20.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "engines": {
-    "node": ">=14.x"
-  },
-  "keywords": ["chemistry", "calculation", "anthropic", "validation", "express", "mongodb", "vercel"],
-  "author": "",
+  "keywords": [
+    "ai",
+    "education",
+    "question-generator",
+    "physics"
+  ],
+  "author": "Your Name",
   "license": "MIT"
-} 
+}

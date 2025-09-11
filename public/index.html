@@ -1,226 +1,2535 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChemCalc Pro - AI-Powered Chemistry Question Generator</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Question Cloning Tool</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2b;
+      --muted: #7f8da9;
+      --text: #eaf0ff;
+      --accent: #6aa0ff;
+      --accent-2: #a66bff;
+      --success: #28c38f;
+      --danger: #ff6b6b;
+      --border: #223149;
+      --surface: #0e1729;
+    }
+    /* Light theme overrides */
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #1e293b;
+      --accent: #2563eb;
+      --accent-2: #7c3aed;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --border: #e2e8f0;
+      --surface: #f1f5f9;
+    }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--text); transition: background-color 0.2s ease, color 0.2s ease; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 8px; }
+    
+    /* Mobile-first responsive breakpoints */
+    @media (min-width: 768px) {
+      body { padding: 24px; }
+      .container { padding: 0 20px; }
+    }
+    h1 { margin: 0 0 8px; font-weight: 700; letter-spacing: -0.02em; font-size: clamp(20px, 5vw, 28px); }
+    .subtitle { color: var(--muted); margin-bottom: 16px; font-size: clamp(14px, 3vw, 16px); }
+    
+    @media (min-width: 768px) {
+      .subtitle { margin-bottom: 24px; }
+    }
+    textarea, input, select { width: 100%; box-sizing: border-box; padding: 14px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px; outline: none; transition: border .2s, background-color .2s ease, color .2s ease; font-size: 16px; /* Prevents zoom on iOS */ }
+    
+    @media (min-width: 768px) {
+      textarea, input, select { padding: 12px 14px; font-size: 14px; }
+    }
+    textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+    textarea::placeholder, input::placeholder { color: var(--muted); opacity: 0.7; }
+    [data-theme="light"] textarea::placeholder, [data-theme="light"] input::placeholder { color: #94a3b8; opacity: 1; }
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; white-space: pre-wrap; color: var(--text); margin: 8px 0; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 16px 0; }
+    .col { display: block; }
+    
+    @media (min-width: 768px) {
+      .row { grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+    }
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
+    .btn { cursor: pointer; border: none; padding: 14px 18px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; font-weight: 600; transition: transform .06s ease; min-height: 44px; min-width: 44px; box-sizing: border-box; font-size: 14px; }
+    
+    @media (min-width: 768px) {
+      .toolbar { gap: 12px; }
+      .btn { padding: 12px 16px; min-height: auto; min-width: auto; }
+    }
+    .btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+    .btn:active { transform: translateY(1px); }
+    .pill { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px; color: var(--muted); font-size: 12px; }
+    .callout { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; color: var(--muted); display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .callout .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+    details { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin: 20px 0; }
+    summary { list-style: none; cursor: pointer; padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 500; }
+    .panel { padding: 18px; }
+    .math-content { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 14px; margin: 12px 0; font-family: 'Times New Roman', serif; border-radius: 10px; color: var(--text); }
+    
+    @media (min-width: 768px) {
+      .math-content { padding: 18px; }
+    }
+    [data-theme="light"] .math-content { background: #ffffff; border-color: #e2e8f0; color: #1e293b; }
+    .math-content .question-text, .math-content .solution-text { background: #0a1018; padding: 12px; border-radius: 8px; color: var(--text); }
+    [data-theme="light"] .math-content .question-text, [data-theme="light"] .math-content .solution-text { background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 16px 0; transition: background-color 0.2s ease, border-color 0.2s ease; }
+    
+    @media (min-width: 768px) {
+      .card { padding: 20px; margin: 20px 0; }
+    }
+    .loader { width: 18px; height: 18px; border: 2px solid #2a3a59; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none; }
+    
+    /* Mobile-specific improvements */
+    @media (max-width: 767px) {
+      /* Better mobile scrolling */
+      body {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden;
+      }
+      
+      /* Prevent horizontal scroll */
+      .container {
+        overflow-x: hidden;
+      }
+      
+      /* Larger tap targets for mobile */
+      select, input[type="range"] {
+        min-height: 44px;
+      }
+      
+      /* Better spacing for mobile */
+      .callout {
+        padding: 12px 14px;
+        margin-bottom: 16px;
+      }
+      
+      /* Stack toolbar buttons better on mobile */
+      .toolbar {
+        justify-content: center;
+      }
+      
+      /* Make primary button more prominent on mobile */
+      .btn.primary {
+        font-size: 16px;
+        padding: 16px 24px;
+        font-weight: 700;
+      }
+    }
+
+    /* Theme toggle icon button */
+    .icon-btn { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+    
+    @media (min-width: 768px) {
+      .icon-btn { width: 34px; height: 34px; }
+    }
+    .icon-btn:hover { filter: brightness(1.05); }
+    .icon { font-size: 16px; line-height: 1; }
+
+    /* Responsive top navigation */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    @media (max-width: 480px) {
+      .top-nav {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+      
+      .nav-actions {
+        justify-content: center;
+        gap: 12px;
+      }
+    }
+    
+    @media (min-width: 768px) {
+      .top-nav {
+        margin-bottom: 8px;
+      }
+      
+      .nav-actions {
+        gap: 10px;
+      }
+    }
+    
+    /* iPad/Tablet specific optimizations */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .container {
+        max-width: 100%;
+        padding: 0 24px;
+      }
+      
+      .workflow-steps {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+      }
+      
+      .step-label {
+        font-size: 11px;
+      }
+    }
+
+    /* Workflow Progress Styles */
+    .workflow-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    
+    @media (min-width: 768px) {
+      .workflow-container {
+        padding: 24px;
+        margin: 24px 0;
+      }
+    }
+
+    .workflow-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .workflow-header h3 {
+      margin: 0 0 16px 0;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .progress-bar {
+      background: var(--border);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, var(--accent), #4CAF50);
+      height: 100%;
+      transition: width 0.5s ease;
+      border-radius: 4px;
+    }
+
+    .progress-text {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    [data-theme="light"] .progress-text { color: #64748b; }
+
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+      position: relative;
+    }
+    
+    @media (min-width: 768px) {
+      .workflow-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 32px 0;
+        gap: 0;
+      }
+    }
+
+    .workflow-steps::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 32px;
+      right: 32px;
+      height: 2px;
+      background: var(--border);
+      z-index: 1;
+      display: none;
+    }
+    
+    @media (min-width: 768px) {
+      .workflow-steps::before {
+        display: block;
+      }
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .step-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+    
+    @media (min-width: 768px) {
+      .step-label {
+        font-size: 12px;
+      }
+    }
+    [data-theme="light"] .step-label { color: #64748b; }
+
+    .step.active .step-circle {
+      background: var(--accent);
+      color: var(--bg);
+      transform: scale(1.1);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+
+    .step.active .step-label {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .step.completed .step-circle {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .step.completed .step-label {
+      color: #4CAF50;
+    }
+
+    .next-action {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .next-action-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .next-action-desc {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    [data-theme="light"] .next-action-desc { color: #64748b; }
+
+    #nextStepBtn {
+      background: linear-gradient(135deg, var(--accent), #10B981);
+      border: none;
+      padding: 12px 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+
+    #nextStepBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Disabled button styles */
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn:disabled:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    
+    /* Section spacing improvements */
+    .question-section { margin-bottom: 24px; }
+    .question-selector { margin-bottom: 20px; }
+    .slider-section { margin: 24px 0; }
+    .slider-section label { display: block; margin-bottom: 12px; font-weight: 500; }
+    .advanced-section { margin-top: 24px; }
+    
+    /* Better form styling */
+    label { font-weight: 500; color: var(--text); margin-bottom: 8px; display: block; }
+    input[type="range"] { margin-top: 8px; }
+    
+    /* Improved card spacing for questions */
+    #qa.card { min-height: 60px; color: var(--text); }
+    #qa.card:empty::before { content: "Generated questions will appear here after running the workflow."; color: var(--muted); font-style: italic; }
+    [data-theme="light"] #qa.card { background: #ffffff; color: #1e293b; }
+    [data-theme="light"] #qa.card:empty::before { color: #64748b; }
+    
+    /* Model selector styling */
+    .model-selector { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+    .radio-option { display: flex; align-items: center; cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: background .2s; }
+    .radio-option:hover { background: rgba(106, 160, 255, 0.1); }
+    .radio-option input[type="radio"] { display: none; }
+    .radio-custom { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 50%; margin-right: 10px; position: relative; transition: all .2s; }
+    .radio-option input[type="radio"]:checked + .radio-custom { border-color: var(--accent); background: var(--accent); }
+    .radio-option input[type="radio"]:checked + .radio-custom::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: white; border-radius: 50%; }
+    .radio-label { flex: 1; font-weight: 500; }
+    .model-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .model-badge.fast { background: var(--success); color: white; }
+    .model-badge.quality { background: var(--accent); color: white; }
+    /* Inline validation hints */
+    .hint { color: #ffbdbd; font-size: 12px; min-height: 16px; margin-top: 6px; }
+    [data-theme="light"] .hint { color: #dc2626; }
+    .caption { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    [data-theme="light"] .caption { color: #64748b; }
+    /* Toasts */
+    .toast-container { position: fixed; left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast { background: rgba(0,0,0,0.9); color: #fff; padding: 12px 16px; border-radius: 8px; min-width: 160px; max-width: 380px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); font-size: 13px; font-weight: 500; }
+    .toast.success { background: #16a34a; color: #fff; border-color: #22c55e; }
+    .toast.error { background: #dc2626; color: #fff; border-color: #ef4444; }
+    .toast.info { background: #2563eb; color: #fff; border-color: #3b82f6; }
+    
+    /* Light theme toast overrides */
+    [data-theme="light"] .toast { background: rgba(0,0,0,0.85); color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+    [data-theme="light"] .toast.success { background: #16a34a; color: #fff; }
+    [data-theme="light"] .toast.error { background: #dc2626; color: #fff; }
+    [data-theme="light"] .toast.info { background: #2563eb; color: #fff; }
+    
+    /* Loading overlay */
+    .loading-overlay { 
+      position: fixed; 
+      top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(0,0,0,0.7); 
+      backdrop-filter: blur(8px); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 10000; 
+      transition: opacity 0.3s ease;
+    }
+    [data-theme="light"] .loading-overlay { background: rgba(255,255,255,0.8); }
+    .loading-content { 
+      text-align: center; 
+      color: var(--text); 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 16px; 
+    }
+    .loading-spinner { 
+      width: 40px; 
+      height: 40px; 
+      border: 3px solid rgba(106, 160, 255, 0.2); 
+      border-top: 3px solid var(--accent); 
+      border-radius: 50%; 
+      animation: spin 1s linear infinite; 
+    }
+    .loading-text { 
+      font-size: 16px; 
+      font-weight: 500; 
+      color: var(--text); 
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🧮 ChemCalc Pro</h1>
-            <p>Professional AI-powered chemistry question generator with intelligent validation and context management</p>
-        </header>
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading Question Cloning Tool...</div>
+    </div>
+  </div>
 
-        <div class="main-content">
-            <!-- Context Management Section -->
-            <div class="context-management-section">
-                <h2>📚 Context Management</h2>
-                <div class="context-controls">
-                    <button id="loadContextBtn" class="btn btn-secondary">📂 Load Saved Context</button>
-                    <button id="saveContextBtn" class="btn btn-secondary">💾 Save Current Context</button>
-                </div>
-                
-                <!-- Context List Modal -->
-                <div id="contextModal" class="modal" style="display: none;">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-                        <h3>Saved Contexts</h3>
-                        <div class="context-list"></div>
-                    </div>
-                </div>
-                
-                <!-- Save Context Modal -->
-                <div id="saveContextModal" class="modal" style="display: none;">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-                        <h3>Save Context</h3>
-                        <form id="saveContextForm">
-                            <input type="text" id="contextName" placeholder="Context Name" required>
-                            <textarea id="contextDescription" placeholder="Description (optional)" rows="3"></textarea>
-                            <input type="text" id="contextTags" placeholder="Tags (comma-separated)">
-                            <button type="submit" class="btn btn-primary">💾 Save Context</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+  <div class="container">
+  <!-- Top nav -->
+  <div class="top-nav">
+    <h1 style="margin:0;">Question Cloning Tool</h1>
+    <div class="nav-actions">
+      <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+        <svg id="themeIconSvg" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path id="sunIcon" d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.64 5.64L4.22 4.22M19.78 19.78l-1.42-1.42M5.64 18.36L4.22 19.78M19.78 4.22l-1.42 1.42M12 8a4 4 0 100 8 4 4 0 000-8z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <span id="userEmail" class="pill">Signed in</span>
+      <button id="signOut" class="btn secondary">Sign out</button>
+    </div>
+  </div>
+  <div class="callout"><span class="dot"></span><span>Click "Run All" to build, parameterize, generate runs, and compose final questions automatically.</span></div>
+  
+  <div class="question-selector">
+  <div class="row">
+    <div class="col">
+        <label>Subject:</label>
+        <select id="subjectSelect" onchange="onSubjectChange()"></select>
+      </div>
+      <div class="col">
+        <label>Select Question:</label>
+        <select id="questionSelect" onchange="loadQuestion()"></select>
+      </div>
+    </div>
+    <div class="toolbar" style="margin-top:8px;">
+      <button id="saveQuestion" class="btn secondary">Save to DB</button>
+      <button id="saveCopy" class="btn secondary">Save as Copy</button>
+      <button id="newQuestion" class="btn secondary">New</button>
+      <button id="deleteQuestion" class="btn secondary" style="margin-left:auto;">Delete</button>
+    </div>
+  </div>
+  <!-- Core authoring layout: vertical hierarchy -->
+  <div class="row question-section" style="display:block;">
+    <div class="col" style="max-width: 100%;">
+      <label>Subject Rules</label>
+      <textarea id="sr" rows="6" placeholder="Subject rules will load automatically when you select a subject..."></textarea>
+      <div class="caption">These are fixed by subject. Select a subject to load them.</div>
 
-            <div class="form-section">
-                <div class="input-group">
-                    <label for="question">📝 Question:</label>
-                    <textarea id="question" placeholder="Enter your mathematical question here..." rows="8">A 3.00 g mixture of calcium carbonate and calcium chloride was added to 50.0 cm3 of 1.00 mol dm3 hydrochloric acid. The resulting solution was made up to 250 cm3 in a graduated flask with deionised water. When 25.0 cm3 of this solution was titrated with 0.100 mol dm3 sodium hydroxide solution,   21.05 cm3 of sodium hydroxide was required for complete reaction. 
-                        Calculate the percentage by mass of calcium carbonate in the given mixture.	
-                        
-                        _____
-                        
-                        Amount of NaOH reacted = ( )(0.100) = 2.105 x 10–3 mol
-                        
-                        HCl(aq)  +  NaOH(aq)    NaCl(aq)  +  H2O(l) 
-                        Amount of HCl that reacted with NaOH = 2.105 x 10–3 mol
-                        Amount of HCl in 250 cm3 of solution = ( )(2.105 x 10–3) = 2.105 x 10–2 mol
-                        
-                        Initial amount of HCl used = ( )(1.00) = 5.00 x 10–2 mol
-                        Amount of HCl that reacted with CaCO3 = 5.00 x 10–2 – 2.105 x 10–2 = 2.895 x 10–2 mol  
-                        
-                        CaCO3(s)  +  2HCl(aq)    CaCl2(aq)  +  CO2(g)  +  H2O(l)
-                        Amount of CaCO3 reacted = (½)(2.895 x 10–2) = 1.448 x 10–2 mol  
-                        
-                        Molar mass of CaCO3 = 40.1 + 12.0 + 3 x 16.0 = 100.1 g mol–1 
-                        Mass of CaCO3 = (1.448 x 10–2)(100.1) = 1.449 g 
-                        Hence percentage by mass of CaCO3 in the mixture = ( )(100%) = 48.3%</textarea>
-                </div>
+      <label style="margin-top:16px;">Question Rules</label>
+      <textarea id="qr" rows="6" placeholder="Enter question-specific rules and constraints..."></textarea>
+      <div id="hintRules" class="hint"></div>
 
-                <div class="input-group">
-                    <label for="context">⚙️ Additional Context:</label>
-                    <textarea id="context" placeholder="Enter any additional context or constraints..." rows="6">Use cm3 for volumes, mol dm-3 for concentrations, g for mass, mol for amount of substance, and g mol-1 for molar mass.
-                        Use 3.s.f for final answers, and 5.s.f for intermediate answers.
-                        Percentage by mass is a percentage, and it is a number between 20% and 80%.
-                        Please tweak the values slightly to make the calculation work.
-                        Please use the same chemicals and reactions as the original question, this is a back-titration question.
-                        Volumetric flask has a fixed volume of 250cm3.
-                        Pipette is used to take 25.0 cm3 of the solution.</textarea>
-                </div>
+      <label style="margin-top:16px;">Question Title</label>
+      <input type="text" id="questionTitle" placeholder="Enter a descriptive title for this question..." />
+      <div id="hintTitle" class="hint"></div>
 
-                <div class="button-group">
-                    <button id="generateBtn" class="btn btn-primary">🔄 Generate & Validate Sample Question</button>
-                    <button id="startOverBtn" class="btn btn-secondary" style="display: none;">🔄 Start Over</button>
-                </div>
-            </div>
+      <label style="margin-top:16px;">Question</label>
+      <textarea id="q" rows="6" placeholder="Enter your question here..."></textarea>
+      <div id="hintQuestion" class="hint"></div>
 
-            <div class="results-section">
-                <div class="step-indicator">
-                    <div class="step" id="step1">1. Generate JavaScript Code</div>
-                    <div class="step" id="step2">2. Execute Calculation</div>
-                    <div class="step" id="step3">3. Validate with AI</div>
-                    <div class="step" id="step4">4. Generate Sample Question</div>
-                    <div class="step" id="step5">5. User Approval</div>
-                    <div class="step" id="step6">6. Generate 4 More Questions</div>
-                </div>
+      <label style="margin-top:16px;">Worked Solution (authoritative)</label>
+      <textarea id="ws" rows="8" placeholder="Enter the step-by-step worked solution..."></textarea>
+      <div id="hintSolution" class="hint"></div>
+    </div>
+  </div>
 
-                <div id="loadingIndicator" class="loading hidden">
-                    <div class="spinner"></div>
-                    <p>Processing your calculation...</p>
-                </div>
-
-                <!-- Workflow Step 1 & 2: Code Generation & Execution -->
-                <div id="codeExecutionWorkflow" class="workflow-item hidden">
-                    <div class="side-by-side">
-                        <div id="codeSection" class="result-card">
-                            <h3>Generated JavaScript Code</h3>
-                            <div class="code-container">
-                                <pre id="generatedCode"></pre>
-                                <button id="runCodeBtn" class="btn btn-secondary hidden">Run Calculation</button>
-                            </div>
-                        </div>
-
-                        <div id="executionSection" class="result-card">
-                            <h3>Calculation Output</h3>
-                            <div id="codeOutput" class="output-container"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Workflow Step 3: Validation -->
-                <div id="validationWorkflow" class="workflow-item hidden">
-                    <div id="validationSection" class="result-card">
-                        <h3>AI Validation Results</h3>
-                        <div id="validationResult" class="validation-container"></div>
-                        <div id="retryInfo" class="retry-info hidden">
-                            <p>Attempt <span id="attemptNumber">1</span> of 3</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Workflow Step 4 & 5: Sample Question -->
-                <div id="sampleWorkflow" class="workflow-item hidden">
-                    <div id="sampleQuestionSection" class="result-card">
-                        <h3>🔍 Generated Sample Question</h3>
-                        <div id="sampleQuestion" class="question-container"></div>
-                        <div class="approval-buttons">
-                            <button id="approveBtn" class="btn btn-success">✅ Approve & Generate 4 More</button>
-                            <button id="regenerateBtn" class="btn btn-warning">🔄 Regenerate Sample</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Workflow Step 6: Final Questions -->
-                <div id="finalWorkflow" class="workflow-item hidden">
-                    <div id="finalQuestionsSection" class="result-card">
-                        <h3>🎉 Generating Your 4 Questions</h3>
-                        
-                        <!-- Progress tracking for each question -->
-                        <div id="questionProgress" class="question-progress-container">
-                            <!-- Question 1 Progress -->
-                            <div id="question1Progress" class="question-progress-item">
-                                <h4>📄 Question 1</h4>
-                                <div class="progress-steps">
-                                    <div class="progress-step" id="q1-step-generate">📝 Generating...</div>
-                                    <div class="progress-step" id="q1-step-code">⚙️ Creating code...</div>
-                                    <div class="progress-step" id="q1-step-test">🧪 Testing values...</div>
-                                    <div class="progress-step" id="q1-step-complete">✅ Complete</div>
-                                </div>
-                                <div class="generated-question" id="question1Content" style="display: none;"></div>
-                            </div>
-                            
-                            <!-- Question 2 Progress -->
-                            <div id="question2Progress" class="question-progress-item">
-                                <h4>📄 Question 2</h4>
-                                <div class="progress-steps">
-                                    <div class="progress-step" id="q2-step-generate">📝 Generating...</div>
-                                    <div class="progress-step" id="q2-step-code">⚙️ Creating code...</div>
-                                    <div class="progress-step" id="q2-step-test">🧪 Testing values...</div>
-                                    <div class="progress-step" id="q2-step-complete">✅ Complete</div>
-                                </div>
-                                <div class="generated-question" id="question2Content" style="display: none;"></div>
-                            </div>
-                            
-                            <!-- Question 3 Progress -->
-                            <div id="question3Progress" class="question-progress-item">
-                                <h4>📄 Question 3</h4>
-                                <div class="progress-steps">
-                                    <div class="progress-step" id="q3-step-generate">📝 Generating...</div>
-                                    <div class="progress-step" id="q3-step-code">⚙️ Creating code...</div>
-                                    <div class="progress-step" id="q3-step-test">🧪 Testing values...</div>
-                                    <div class="progress-step" id="q3-step-complete">✅ Complete</div>
-                                </div>
-                                <div class="generated-question" id="question3Content" style="display: none;"></div>
-                            </div>
-                            
-                            <!-- Question 4 Progress -->
-                            <div id="question4Progress" class="question-progress-item">
-                                <h4>📄 Question 4</h4>
-                                <div class="progress-steps">
-                                    <div class="progress-step" id="q4-step-generate">📝 Generating...</div>
-                                    <div class="progress-step" id="q4-step-code">⚙️ Creating code...</div>
-                                    <div class="progress-step" id="q4-step-test">🧪 Testing values...</div>
-                                    <div class="progress-step" id="q4-step-complete">✅ Complete</div>
-                                </div>
-                                <div class="generated-question" id="question4Content" style="display: none;"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Final completed questions display -->
-                        <div id="finalQuestions" class="questions-container" style="display: none;"></div>
-                        
-                        <div class="download-buttons" id="downloadButtons" style="display: none;">
-                            <button id="copyAllBtn" class="btn btn-secondary">📋 Copy All Questions</button>
-                            <button id="startOverBtn" class="btn btn-secondary">🔄 Start Over</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Error/Final Result Section -->
-                <div id="finalResultWorkflow" class="workflow-item hidden">
-                    <div id="finalResult" class="result-card">
-                        <h3>Final Result</h3>
-                        <div id="finalOutput" class="final-output"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Workflow Progress Indicator -->
+  <div class="workflow-container">
+    <div class="workflow-header">
+      <h3>📋 Question Cloning Workflow</h3>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-text" id="progressText">Ready to start • Step 1 of 6</div>
+    </div>
+    
+    <div class="workflow-steps">
+      <div class="step" id="step1" data-step="1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Create & Save</div>
+      </div>
+      <div class="step" id="step2" data-step="2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Build Code</div>
+      </div>
+      <div class="step" id="step3" data-step="3">
+        <div class="step-circle">3</div>
+        <div class="step-label">Parameterize</div>
+      </div>
+      <div class="step" id="step4" data-step="4">
+        <div class="step-circle">4</div>
+        <div class="step-label">Generate Runs</div>
+      </div>
+      <div class="step" id="step5" data-step="5">
+        <div class="step-circle">5</div>
+        <div class="step-label">Compose Q&A</div>
+      </div>
+      <div class="step" id="step6" data-step="6">
+        <div class="step-circle">6</div>
+        <div class="step-label">Complete ✓</div>
+      </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Next Step Guidance -->
+    <div class="next-action" id="nextAction">
+      <div class="next-action-content">
+        <div class="next-action-title" id="nextActionTitle">👋 Ready to create questions?</div>
+        <div class="next-action-desc" id="nextActionDesc">Fill in your question details above, then save to database</div>
+        <button id="nextStepBtn" class="btn primary" style="display: none;">
+          <span id="nextStepText">Save Question</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button id="runAll" class="btn primary">⚡ Run All Steps</button>
+    <span id="modeBadge" class="pill" title="Detection based on verified state">Mode: Detecting…</span>
+    <button id="regenerateBtn" class="btn secondary" style="display: none;">🔄 Regenerate Failed Step</button>
+    <span id="status" class="pill">Idle</span>
+    <span id="spinner" class="loader hidden"></span>
+    <button id="toggleAdvanced" class="btn secondary" style="margin-left: auto;">Show Individual Steps</button>
+    </div>
+
+  <div class="row">
+    <div class="col slider-section">
+      <label>Number of questions to generate: <span id="numDisplay">3</span></label>
+      <input id="num" type="range" value="3" min="1" max="10" oninput="document.getElementById('numDisplay').textContent = this.value" />
+      <div class="caption">Drag to choose how many variations you want.</div>
+    </div>
+    <div class="col slider-section">
+      <label>Question Generation Model:</label>
+      <div class="model-selector">
+        <label class="radio-option">
+          <input type="radio" name="qaModel" value="groq" checked>
+          <span class="radio-custom"></span>
+          <span class="radio-label">Groq (openai/gpt-oss-120b)</span>
+          <span class="model-badge fast">Fast</span>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="qaModel" value="gpt-4.1-mini">
+          <span class="radio-custom"></span>
+          <span class="radio-label">OpenAI (gpt-4.1-mini)</span>
+          <span class="model-badge quality">High Quality</span>
+        </label>
+        <div class="caption">Groq is faster for quick drafts. OpenAI is higher quality for final Q&A.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generated Questions - Full Width Section -->
+  <div id="qa" class="card"></div>
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Advanced Controls (hidden by default) -->
+  <div id="advancedControls" class="hidden advanced-section">
+    <div class="toolbar">
+      <button id="build" class="btn secondary">Build + Verify</button>
+      <button id="rng" class="btn secondary">Parameterize</button>
+      <button id="gen" class="btn secondary">Generate Variations</button>
+      <button id="plan" class="btn secondary">Plan Better Params</button>
+      <button id="compose" class="btn secondary">Create Final Questions</button>
+    </div>
+  </div>
+
+  <!-- Combined Results Section (collapsed by default) -->
+  <details>
+    <summary>Processing Details (collapsed)</summary>
+    <div class="panel">
+  <div class="row">
+    <div class="col">
+          <h4>Build & Verify</h4>
+      <pre id="code"></pre>
+      <pre id="logs"></pre>
+      <pre id="verdict"></pre>
+    </div>
+    <div class="col">
+          <h4>Parameterize (RNG + Eval)</h4>
+      <pre id="rngOut"></pre>
+      <pre id="evalOut"></pre>
+          <pre id="reasonsOut"></pre>
+          <pre id="calcOut"></pre>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+          <h4>Generated Runs</h4>
+      <pre id="runs"></pre>
+    </div>
+    <div class="col">
+          <h4>Planning History</h4>
+          <pre id="planHistory"></pre>
+    </div>
+  </div>
+    </div>
+  </details>
+
+  <script>
+    const $ = (id) => document.getElementById(id)
+    let SUPABASE_URL = ''
+    let SUPABASE_ANON_KEY = ''
+    let sb = null
+    let session = null
+    let SUBJECTS_LIST = []
+    let QUESTIONS_LIST = []
+    let CURRENT_SUBJECT = null
+    let CURRENT_ID = null
+    let CURRENT_STEP = 1
+    let DEV_MODE = false
+    
+    // Removed hardcoded questions; list will be loaded from DB
+    
+    // Load subjects and populate dropdown
+    async function refreshSubjects() {
+      try {
+        const headers = {}
+        const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+        if (token) headers['Authorization'] = 'Bearer ' + token
+        const r = await fetch('/api/subjects', { headers })
+        
+        // Check for authentication errors - token expired/invalid
+        if (r.status === 401 || r.status === 403) {
+          console.warn('Authentication failed during subjects fetch - token expired/invalid')
+          // Clear invalid session and redirect to login
+          session = null
+          localStorage.removeItem('supabase.auth.token')
+          sessionStorage.clear()
+          await sb.auth.signOut()
+          hideLoadingOverlay()
+          window.location.href = '/login'
+          return
+        }
+        
+        const j = await r.json()
+        if (!j.ok) { 
+          console.warn('Subjects fetch failed:', j.error)
+          hideLoadingOverlay()
+          return 
+        }
+        
+        SUBJECTS_LIST = Array.isArray(j.items) ? j.items : []
+        const sel = $('subjectSelect')
+        sel.innerHTML = ''
+        
+        // Add default "Select a subject" option
+        const defaultOpt = document.createElement('option')
+        defaultOpt.value = ''
+        defaultOpt.textContent = 'Select a subject...'
+        defaultOpt.disabled = true
+        defaultOpt.selected = true
+        sel.appendChild(defaultOpt)
+        
+        // Add actual subjects
+        SUBJECTS_LIST.forEach(item => {
+          const opt = document.createElement('option')
+          opt.value = item.id
+          opt.textContent = item.displayName || item.name
+          sel.appendChild(opt)
+        })
+        
+        // Don't auto-select anything - wait for user choice
+        clearAllFields()
+        
+        // Hide loading overlay once data is loaded
+        hideLoadingOverlay()
+      } catch (e) {
+        console.warn('Subjects fetch error:', e)
+        hideLoadingOverlay() // Hide even on error
+      }
+    }
+
+    // When subject changes, load questions for that subject and populate subject rules
+    async function onSubjectChange() {
+      const subjectId = $('subjectSelect').value
+      
+      if (!subjectId) {
+        // No subject selected - clear everything
+        CURRENT_SUBJECT = null
+        clearAllFields()
+        return
+      }
+      
+      CURRENT_SUBJECT = SUBJECTS_LIST.find(s => s.id === subjectId)
+      if (CURRENT_SUBJECT) {
+        $('sr').value = CURRENT_SUBJECT.subjectRules || ''
+        console.log(`📁 Selected subject: ${CURRENT_SUBJECT.displayName}`)
+        await refreshQuestions(subjectId)
+      }
+    }
+
+    // Load questions for selected subject
+    async function refreshQuestions(subjectId) {
+      try {
+        const headers = {}
+        const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+        if (token) headers['Authorization'] = 'Bearer ' + token
+        const url = subjectId ? `/api/questions?subjectId=${subjectId}` : '/api/questions'
+        const r = await fetch(url, { headers })
+        const j = await r.json()
+        if (!j.ok) { console.warn('Questions fetch failed:', j.error); return }
+        QUESTIONS_LIST = Array.isArray(j.items) ? j.items : []
+        const sel = $('questionSelect')
+        sel.innerHTML = ''
+        
+        // Add default "Select a question" option
+        const defaultOpt = document.createElement('option')
+        defaultOpt.value = ''
+        defaultOpt.textContent = 'Select a question...'
+        defaultOpt.disabled = true
+        defaultOpt.selected = true
+        sel.appendChild(defaultOpt)
+        
+        if (QUESTIONS_LIST.length === 0) {
+          const noQuestionsOpt = document.createElement('option')
+          noQuestionsOpt.value = ''
+          noQuestionsOpt.textContent = 'No questions yet - click New to create one'
+          noQuestionsOpt.disabled = true
+          sel.appendChild(noQuestionsOpt)
+          clearFields()
+        } else {
+          QUESTIONS_LIST.forEach(item => {
+            const opt = document.createElement('option')
+            opt.value = item.id
+            opt.textContent = item.title || `Question ${item.id}`
+            sel.appendChild(opt)
+          })
+          // Don't auto-select - let user choose
+          clearFields()
+        }
+      } catch (e) {
+        console.warn('Questions fetch error:', e)
+      }
+    }
+
+    // Load question data based on dropdown selection
+    function loadQuestion() {
+      const selected = $('questionSelect').value
+      if (!selected) return clearFields()
+      let data = QUESTIONS_LIST.find(q => String(q.id) === String(selected))
+      if (!data) {
+        console.warn(`Question with ID ${selected} not found in DB.`)
+        return clearFields()
+      }
+      CURRENT_ID = data.id
+      console.log('📋 Setting CURRENT_ID to:', CURRENT_ID, 'for question:', data.title)
+      $('questionTitle').value = data.title || ''
+      $('q').value = data.question || ''
+      $('ws').value = data.workedSolution || ''
+      $('qr').value = data.questionRules || ''
+      
+      // Show if verified code exists
+      if (data.verifiedCode) {
+        $('code').textContent = data.verifiedCode
+        $('verdict').textContent = 'Verdict: pass (loaded from DB)\nReason: Previously verified code'
+        setStatus('Question loaded with verified code ✓', false)
+        // After refresh there are no in-memory runs; go back one step to Generate Runs
+        updateWorkflowStep(4)
+      } else {
+        $('code').textContent = ''
+        $('verdict').textContent = ''
+        setStatus('Question loaded - ready to run', false)
+        updateWorkflowStep(2)
+      }
+
+      // Restore saved parameterization if available (so user can generate runs without re-parameterizing)
+      if (data.savedParameterization) {
+        console.log('🔄 Restoring saved parameterization:', data.savedParameterization)
+        window.PARAMETERIZATION = data.savedParameterization
+        try {
+          const inputs = data.savedParameterization.inputs || {}
+          $('rngOut').textContent = JSON.stringify(inputs, null, 2)
+          $('evalOut').textContent = data.savedParameterization.eval || ''
+          $('reasonsOut').textContent = String(data.savedParameterization.reasons || '')
+          $('calcOut').textContent = data.savedParameterization.calculation || ''
+          console.log('✅ Parameterization restored with', Object.keys(inputs).length, 'parameters')
+        } catch (e) { 
+          console.error('❌ Error restoring parameterization:', e)
+        }
+      } else {
+        console.log('ℹ️ No saved parameterization found for this question')
+      }
+      
+      // Update save button for existing questions
+      updateSaveButtonVisibility()
+      
+      console.log(`📋 Loaded Question ${data.title || data.id}${data.verifiedCode ? ' (with verified code)' : ''}`)
+        
+      // Clear other transient results (preserve parameterization panels if restored above)
+      $('logs').innerHTML = ''
+      $('runs').innerHTML = ''
+      $('qa').innerHTML = ''
+      $('planHistory').textContent = ''
+      
+      // Reset planning state (do not clear saved parameterization)
+      window.__planningAttempts = 0
+      window.__planningHistory = []
+      window.__lastGenerationError = null
+      window.__currentAlternatives = []
+      window.__alternativeIndex = 0
+    }
+
+    function clearFields() {
+      CURRENT_ID = null
+      $('questionTitle').value = ''
+      $('q').value = ''
+      $('ws').value = ''
+      $('qr').value = ''
+      $('code').textContent = ''
+      $('verdict').textContent = ''
+      setStatus('Ready for new question', false)
+      updateWorkflowStep(1)
+      updateSaveButtonVisibility()
+    }
+
+    function clearAllFields() {
+      CURRENT_ID = null
+      CURRENT_SUBJECT = null
+      $('questionTitle').value = ''
+      $('q').value = ''
+      $('ws').value = ''
+      $('sr').value = ''
+      $('qr').value = ''
+      $('code').textContent = ''
+      $('verdict').textContent = ''
+      
+      // Clear question dropdown
+      const questionSel = $('questionSelect')
+      questionSel.innerHTML = ''
+      const defaultOpt = document.createElement('option')
+      defaultOpt.value = ''
+      defaultOpt.textContent = 'Select a subject first'
+      defaultOpt.disabled = true
+      defaultOpt.selected = true
+      questionSel.appendChild(defaultOpt)
+      
+      setStatus('Select a subject to begin', false)
+      updateWorkflowStep(1)
+      updateSaveButtonVisibility()
+    }
+
+    // Workflow Progress Management
+    function updateWorkflowStep(step, completed = false) {
+      CURRENT_STEP = step
+      
+      // Update progress bar
+      const progress = ((step - 1) / 5) * 100
+      $('progressFill').style.width = progress + '%'
+      
+      // Update progress text
+      const stepNames = ['Create & Save', 'Build Code', 'Parameterize', 'Generate Runs', 'Compose Q&A', 'Complete']
+      $('progressText').textContent = completed ? 'Complete! ✅' : `${stepNames[step - 1]} • Step ${step} of 6`
+      
+      // Update step indicators
+      for (let i = 1; i <= 6; i++) {
+        const stepEl = $('step' + i)
+        stepEl.classList.remove('active', 'completed')
+        if (i < step || (i === step && completed)) {
+          // Mark previous steps and the final step (when completed) as completed
+          stepEl.classList.add('completed')
+        } else if (i === step && !completed) {
+          // Current working step
+          stepEl.classList.add('active')
+        }
+      }
+      
+      // Update next action guidance
+      updateNextActionGuidance(step, completed)
+    }
+
+    function updateNextActionGuidance(step, completed = false) {
+      const title = $('nextActionTitle')
+      const desc = $('nextActionDesc')
+      const btn = $('nextStepBtn')
+      const btnText = $('nextStepText')
+      
+      if (completed) {
+        title.textContent = '🎉 Workflow Complete!'
+        desc.textContent = 'Your questions have been generated and the verified code has been saved to the database.'
+        btn.style.display = 'none'
+        return
+      }
+      
+      const guidance = {
+        1: {
+          title: CURRENT_SUBJECT ? '👋 Ready to create questions?' : '📚 Select a subject to begin',
+          desc: CURRENT_SUBJECT ? 'Select an existing question to edit, or click "New" to create a fresh question' : 'Choose a subject from the dropdown to load subject rules and start creating questions',
+          btnText: 'Save Question',
+          action: () => $('saveQuestion').click()
+        },
+        2: {
+          title: '🔧 Build calculation code',
+          desc: 'Generate and verify the JavaScript calculation code',
+          btnText: 'Build & Verify',
+          action: () => $('build').click()
+        },
+        3: {
+          title: '⚙️ Create parameters',
+          desc: 'Generate random input parameters for question variations',
+          btnText: 'Generate Parameters',
+          action: () => $('rng').click()
+        },
+        4: {
+          title: '🎲 Generate question runs',
+          desc: 'Create multiple calculation runs with different values',
+          btnText: 'Generate Runs',
+          action: () => $('gen').click()
+        },
+        5: {
+          title: '📝 Compose final questions',
+          desc: 'Create the final formatted questions and solutions',
+          btnText: 'Compose Questions',
+          action: () => $('compose').click()
+        }
+      }
+      
+      const current = guidance[step]
+      if (current) {
+        title.textContent = current.title
+        desc.textContent = current.desc
+        btnText.textContent = current.btnText
+        
+        // Only show save button if we have a subject and content
+        if (step === 1 && !CURRENT_SUBJECT) {
+          btn.style.display = 'none'
+        } else {
+          btn.style.display = 'block'
+          btn.onclick = current.action
+        }
+      } else {
+        btn.style.display = 'none'
+      }
+    }
+
+    // Check if user has filled required fields for step 1
+    function checkStep1Complete() {
+      const hasQuestion = $('q').value.trim().length > 0
+      const hasSolution = $('ws').value.trim().length > 0
+      const hasRules = $('qr').value.trim().length > 0
+      
+      if (hasQuestion && hasSolution && hasRules && CURRENT_STEP === 1) {
+        updateNextActionGuidance(1) // Show save button
+      }
+    }
+
+    // Save button visibility management
+    let __statusTimer = null
+    function setStatus(msg, working){
+      const s=$('status'), sp=$('spinner')
+      s.textContent = msg || 'Idle'
+      if (working) { sp.classList.remove('hidden') } else { sp.classList.add('hidden') }
+      // Auto-clear transient error/info after 2.5s so stale messages disappear (but not during active work)
+      if (__statusTimer) clearTimeout(__statusTimer)
+      if (!working) {
+        __statusTimer = setTimeout(()=>{ 
+          if (s.textContent === msg && sp.classList.contains('hidden')) { 
+            s.textContent='Idle'; 
+            sp.classList.add('hidden') 
+          } 
+        }, 2500)
+      }
+    }
+
+    function updateSaveButtonVisibility() {
+      const saveBtn = $('saveQuestion')
+      const hasTitle = $('questionTitle').value.trim().length > 0
+      const hasQuestion = $('q').value.trim().length > 0
+      const hasSolution = $('ws').value.trim().length > 0
+      const hasQuestionRules = $('qr').value.trim().length > 0
+      const hasSubject = !!CURRENT_SUBJECT
+      
+      console.log('🔍 Save button logic:', { CURRENT_ID, hasTitle, hasQuestion, hasSolution, hasQuestionRules, hasSubject })
+      
+      if (CURRENT_ID) {
+        // Existing question - show update button
+        saveBtn.style.display = 'block'
+        saveBtn.textContent = 'Update Question'
+        saveBtn.disabled = false
+        saveBtn.title = 'Update this existing question'
+        console.log('✅ Showing Update Question button for existing question')
+      } else if (hasSubject && hasTitle && hasQuestion && hasSolution && hasQuestionRules) {
+        // New question with all required fields
+        saveBtn.style.display = 'block'
+        saveBtn.textContent = 'Save to DB'
+        saveBtn.disabled = false
+        saveBtn.title = 'Save new question to database'
+        console.log('✅ Showing Save to DB button - all fields complete')
+      } else {
+        // Missing required fields
+        saveBtn.style.display = 'block'
+        saveBtn.textContent = 'Save to DB'
+        saveBtn.disabled = true
+        const missing = [
+          !hasSubject ? 'Subject' : null,
+          !hasTitle ? 'Title' : null,
+          !hasQuestion ? 'Question' : null,
+          !hasSolution ? 'Solution' : null,
+          !hasQuestionRules ? 'Question Rules' : null
+        ].filter(Boolean)
+        saveBtn.title = 'Please fill in: ' + missing.join(', ')
+        console.log('⚠️ Save button disabled - missing:', missing)
+      }
+    }
+
+    // Add input listeners to detect when fields change
+    ['questionTitle', 'q', 'ws', 'qr'].forEach(id => {
+      $(id).addEventListener('input', () => {
+        updateSaveButtonVisibility()
+        checkStep1Complete()
+      })
+    })
+
+    async function saveCurrentQuestion() {
+      if (!CURRENT_SUBJECT) { 
+        alert('Please select a subject first')
+        return 
+      }
+      
+      // Check if all required fields are filled
+      const title = $('questionTitle').value.trim()
+      const question = $('q').value.trim()
+      const solution = $('ws').value.trim()
+      const questionRules = $('qr').value.trim()
+      
+      // Inline validation hints instead of alerts
+      let invalid = false
+      $('hintTitle').textContent = ''
+      $('hintQuestion').textContent = ''
+      $('hintSolution').textContent = ''
+      $('hintRules').textContent = ''
+      if (!title) { $('hintTitle').textContent = 'Please enter a question title.'; invalid = true }
+      if (!question) { $('hintQuestion').textContent = 'Please enter the question prompt.'; invalid = true }
+      if (!solution) { $('hintSolution').textContent = 'Please provide an authoritative worked solution.'; invalid = true }
+      if (!questionRules) { $('hintRules').textContent = 'Add question-specific rules and constraints.'; invalid = true }
+      if (invalid) return
+      
+      const payload = {
+        id: CURRENT_ID,
+        subjectId: CURRENT_SUBJECT.id,
+        title: title,
+        question: question,
+        workedSolution: solution,
+        questionRules: questionRules,
+        // When updating text fields, clear verifiedCode to force re-verify unless unchanged
+        verifiedCode: CURRENT_ID ? null : undefined
+      }
+      const headers = { 'Content-Type': 'application/json' }
+      const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+      if (token) headers['Authorization'] = 'Bearer ' + token
+      const r = await fetch('/api/questions', { method: 'POST', headers, body: JSON.stringify(payload) })
+      const j = await r.json()
+      if (!j.ok) throw new Error(j.error || 'Save failed')
+      // Update local state in-place without clearing the UI
+      const saved = j.item
+      if (saved && saved.id) {
+        CURRENT_ID = saved.id
+        // Update QUESTIONS_LIST entry or insert if new
+        let idx = QUESTIONS_LIST.findIndex(q => String(q.id) === String(saved.id))
+        const normalized = {
+          id: saved.id,
+          subjectId: saved.subjectId || CURRENT_SUBJECT.id,
+          title: saved.title || $('questionTitle').value.trim(),
+          question: saved.question || $('q').value.trim(),
+          workedSolution: saved.workedSolution || $('ws').value.trim(),
+          questionRules: saved.questionRules || $('qr').value.trim(),
+          verifiedCode: saved.verifiedCode || null,
+          state: saved.state || 'draft',
+          savedParameterization: saved.savedParameterization || null
+        }
+        if (idx >= 0) {
+          QUESTIONS_LIST[idx] = { ...QUESTIONS_LIST[idx], ...normalized }
+        } else {
+          QUESTIONS_LIST.unshift(normalized)
+          // Add option to dropdown
+          const opt = document.createElement('option')
+          opt.value = normalized.id
+          opt.textContent = normalized.title || `Question ${normalized.id}`
+          $('questionSelect').appendChild(opt)
+        }
+        // Ensure dropdown selects the current item
+        $('questionSelect').value = CURRENT_ID
+        updateSaveButtonVisibility()
+        toast(idx >= 0 ? 'Question updated' : 'Question saved', 'success')
+        // Auto re-verify flow: clear current verification and scroll to workflow
+        await autoReverifyAndScroll()
+      }
+    }
+
+    async function deleteCurrentQuestion() {
+      if (!CURRENT_ID) { alert('No question selected'); return }
+      const headers = {}
+      const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+      if (token) headers['Authorization'] = 'Bearer ' + token
+      const r = await fetch('/api/questions/' + CURRENT_ID, { method: 'DELETE', headers })
+      const j = await r.json()
+      if (!j.ok) throw new Error(j.error || 'Delete failed')
+      CURRENT_ID = null
+      await refreshQuestions(CURRENT_SUBJECT?.id)
+    }
+    
+    // Bootstrap Supabase client and auth UI
+    async function initAuth() {
+      try {
+        SUPABASE_URL = '__SUPABASE_URL__'
+        SUPABASE_ANON_KEY = '__SUPABASE_ANON__'
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+          console.warn('Supabase not configured - auth disabled')
+          hideLoadingOverlay()
+          return
+        }
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        const { data } = await sb.auth.getSession()
+        session = data.session
+        
+        // Only redirect if we're certain there's no session
+        if (!session?.user) {
+          console.log('No authenticated session found, redirecting to login')
+          hideLoadingOverlay()
+          window.location.href = '/login'
+          return
+        }
+        
+        // User is authenticated, proceed with app initialization
+        updateAuthUI()
+        
+        // Start analytics session
+        await startAnalyticsSession()
+        
+        await refreshSubjects()
+        
+        // Set up auth state listener for future changes
+        sb.auth.onAuthStateChange((event, s) => { 
+          console.log('Auth state change:', event, s?.user?.email)
+          session = s?.session ?? s
+          if (event === 'SIGNED_OUT' || !session?.user) {
+            console.log('User signed out or session expired, redirecting to login')
+            endAnalyticsSession() // End session before redirect
+            session = null
+            localStorage.removeItem('supabase.auth.token')
+            sessionStorage.clear()
+            window.location.href = '/login'
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('Token refreshed successfully')
+            updateAuthUI()
+          } else {
+            updateAuthUI()
+          }
+        })
+      } catch (e) { 
+        console.error('Auth init failed', e)
+        hideLoadingOverlay()
+        window.location.href = '/login'
+      }
+    }
+
+    function updateAuthUI() {
+      if (session?.user) {
+        $('userEmail').textContent = session.user.email || 'Signed in'
+      }
+    }
+
+    // Attach Authorization header to API calls with automatic logout on auth errors
+    async function post(path, body){
+      const headers = { 'Content-Type':'application/json' }
+      const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+      if (token) headers['Authorization'] = 'Bearer ' + token
+      
+      // Include analytics session ID for tracking
+      const analyticsSessionId = getClientSessionId()
+      if (analyticsSessionId) {
+        headers['X-Analytics-Session'] = analyticsSessionId
+        console.log('📊 Including analytics session header:', analyticsSessionId)
+      } else {
+        console.warn('📊 No analytics session ID available for request to:', path)
+      }
+      const r = await fetch(path,{method:'POST',headers,body:JSON.stringify(body)})
+      
+      // Handle auth errors globally
+      if (r.status === 401 || r.status === 403) {
+        console.warn('API call failed with auth error, logging out user')
+        session = null
+        localStorage.removeItem('supabase.auth.token')
+        sessionStorage.clear()
+        await sb.auth.signOut()
+        window.location.href = '/login'
+        throw new Error('Authentication expired')
+      }
+      
+      if(!r.ok){ const t = await r.text(); throw new Error(t) } 
+      return r.json()
+    }
+    
+    // Dev mode detection: ?dev=1 or Shift+D toggle
+    function detectDevModeFromQuery() {
+      try { const u = new URL(window.location.href); return u.searchParams.get('dev') === '1' } catch(_) { return false }
+    }
+    function setDevMode(enabled) {
+      DEV_MODE = !!enabled
+      const adv = $('advancedControls'); const tog = $('toggleAdvanced');
+      if (DEV_MODE) { tog.style.display = 'inline-block' } else { tog.style.display = 'none'; adv.classList.add('hidden') }
+      const details = document.querySelector('details');
+      if (!DEV_MODE && details) { details.style.display = 'none' } else if (details) { details.style.display = 'block' }
+    }
+
+    // Keyboard shortcuts: Cmd/Ctrl+Enter (Run All), Cmd/Ctrl+S (Save/Update), Shift+D (Dev toggle)
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); $('runAll').click() }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); $('saveQuestion').click() }
+      if (e.shiftKey && (e.key === 'D' || e.key === 'd')) { setDevMode(!DEV_MODE) }
+    })
+
+    // Loading overlay controls
+    function showLoadingOverlay(text = 'Loading Question Cloning Tool...') {
+      const overlay = $('loadingOverlay')
+      const textEl = overlay?.querySelector('.loading-text')
+      if (overlay) {
+        overlay.style.display = 'flex'
+        overlay.style.opacity = '1'
+      }
+      if (textEl) textEl.textContent = text
+    }
+    
+    function hideLoadingOverlay() {
+      const overlay = $('loadingOverlay')
+      if (overlay) {
+        overlay.style.opacity = '0'
+        setTimeout(() => { overlay.style.display = 'none' }, 300)
+      }
+    }
+
+    // Toasts
+    function toast(message, type = 'info', timeout = 2200) {
+      const c = $('toastContainer'); if (!c) return
+      const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = message
+      c.appendChild(t)
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => c.removeChild(t), 300) }, timeout)
+    }
+
+    function updateAdaptiveBadge() {
+      const badge = $('modeBadge'); if (!badge) return
+      const isVerified = Boolean($('code').textContent && !$('verdict').textContent.includes('fail'))
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      badge.textContent = 'Mode: ' + (isVerified ? 'Adaptive – Skip Build' : 'Full Run')
+      if (isLight) {
+        badge.style.background = isVerified ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)'
+        badge.style.border = '1px solid ' + (isVerified ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.4)')
+        badge.style.color = isVerified ? '#166534' : '#1e40af'
+      } else {
+        badge.style.background = isVerified ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)'
+        badge.style.border = '1px solid ' + (isVerified ? 'rgba(16,185,129,0.35)' : 'rgba(59,130,246,0.35)')
+        badge.style.color = isVerified ? '#b9f6e3' : '#cfe4ff'
+      }
+    }
+
+    // Advanced controls toggle
+    $('toggleAdvanced').onclick = () => {
+      const advanced = $('advancedControls')
+      const btn = $('toggleAdvanced')
+      if (advanced.classList.contains('hidden')) {
+        advanced.classList.remove('hidden')
+        btn.textContent = 'Hide Advanced'
+      } else {
+        advanced.classList.add('hidden')
+        btn.textContent = 'Show Advanced'
+      }
+    }
+    const roundToSF = (value, sf) => {
+      if (!Number.isFinite(value) || value === 0) return 0
+      const sign = value < 0 ? -1 : 1
+      const abs = Math.abs(value)
+      const magnitude = Math.floor(Math.log10(abs))
+      const factor = Math.pow(10, sf - magnitude - 1)
+      const rounded = Math.round(abs * factor) / factor
+      return Number((sign * rounded).toPrecision(sf))
+    }
+    const round3 = (v) => roundToSF(v, 3)
+    const round5 = (v) => roundToSF(v, 5)
+
+    function sandboxEval(src) {
+      return Function('roundToSF','round3','round5','console',src)
+    }
+    // Sign out handler
+    window.addEventListener('click', async (e) => {
+      if (e.target?.id === 'signOut') {
+        try { 
+          console.log('Signing out user...')
+          // End analytics session before signing out
+          await endAnalyticsSession()
+          
+          await sb.auth.signOut()
+          session = null
+          // Clear any stored session data
+          localStorage.removeItem('supabase.auth.token')
+          sessionStorage.clear()
+          console.log('Sign out complete, redirecting to login')
+          window.location.href = '/login'
+        } catch(err) {
+          console.error('Sign out error:', err)
+          session = null
+          localStorage.removeItem('supabase.auth.token')
+          sessionStorage.clear()
+          window.location.href = '/login'
+        }
+      }
+    })
+
+    // Toolbar handlers for DB actions
+    document.getElementById('saveQuestion').onclick = async () => {
+      try { 
+        setStatus('Saving...', true)
+        await saveCurrentQuestion()
+        setStatus('Saved ✓', false)
+        toast('Question saved', 'success')
+        updateWorkflowStep(2) // Move to Build Code step
+        updateAdaptiveBadge()
+      }
+      catch(e){ alert(e.message||e); setStatus('Error', false) }
+    }
+    // Save as Copy
+    document.getElementById('saveCopy').onclick = async () => {
+      try {
+        if (!CURRENT_SUBJECT) { alert('Please select a subject first'); return }
+        const payload = { subjectId: CURRENT_SUBJECT.id, title: ($('questionTitle').value.trim() || '') + ' (Copy)', question: $('q').value.trim(), workedSolution: $('ws').value.trim(), questionRules: $('qr').value.trim(), verifiedCode: $('code').textContent || null }
+        const headers = { 'Content-Type': 'application/json' }
+        const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+        if (token) headers['Authorization'] = 'Bearer ' + token
+        const r = await fetch('/api/questions', { method: 'POST', headers, body: JSON.stringify(payload) })
+        const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Save copy failed')
+        const newId = j.item?.id
+        if (newId && payload.verifiedCode && window.PARAMETERIZATION) {
+          await fetch(`/api/questions/${newId}/code`, { method: 'POST', headers, body: JSON.stringify({ code: payload.verifiedCode, parameterization: window.PARAMETERIZATION }) })
+        }
+        toast('Saved as copy', 'success')
+        await refreshQuestions(CURRENT_SUBJECT.id)
+        $('questionSelect').value = newId
+        loadQuestion()
+      } catch (e) { console.error('Save as Copy failed:', e); toast('Save as Copy failed', 'error') }
+    }
+
+    // After update/save, automatically re-verify and scroll to workflow
+    async function autoReverifyAndScroll() {
+      try {
+        // Clear verification state and move to Build step
+        $('code').textContent = ''
+        $('verdict').textContent = ''
+        updateWorkflowStep(2)
+        updateAdaptiveBadge()
+        // Smooth scroll to workflow area and focus Run All Steps
+        const runAllBtn = document.getElementById('runAll')
+        if (runAllBtn) {
+          runAllBtn.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          setTimeout(()=> runAllBtn.focus(), 400)
+        }
+      } catch (_) {}
+    }
+    document.getElementById('newQuestion').onclick = async () => {
+      CURRENT_ID = null
+      $('questionTitle').value = ''
+      $('q').value = ''
+      $('ws').value = ''
+      $('qr').value = ''
+      $('code').textContent = ''
+      $('verdict').textContent = ''
+      // Subject rules stay populated from selected subject
+      setStatus('New draft', false)
+      updateWorkflowStep(1) // Reset to step 1
+      updateSaveButtonVisibility()
+      $('questionTitle').focus() // Focus on title field for new questions
+    }
+    document.getElementById('deleteQuestion').onclick = async () => {
+      try { if (!CURRENT_ID) { alert('No question selected'); return } if (!confirm('Delete this question?')) return; setStatus('Deleting...', true); await deleteCurrentQuestion(); setStatus('Deleted ✓', false) }
+      catch(e){ alert(e.message||e); setStatus('Error', false) }
+    }
+
+    // UI helpers (setStatus is defined above with auto-clear functionality)
+
+    // Step 1: Build code and verify
+    $('build').onclick = async () => {
+      try {
+        // Validate all required fields before making API call
+        const question = $('q').value.trim()
+        const solution = $('ws').value.trim()
+        const subjectRules = $('sr').value.trim()
+        const questionRules = $('qr').value.trim()
+        
+        if (!question) {
+          alert('Please enter a question before building code')
+          $('q').focus()
+          return
+        }
+        if (!solution) {
+          alert('Please enter a worked solution before building code')
+          $('ws').focus()
+          return
+        }
+        if (!subjectRules) {
+          alert('Please select a subject to load subject rules')
+          return
+        }
+        if (!questionRules) {
+          alert('Please enter question rules before building code')
+          $('qr').focus()
+          return
+        }
+        
+        setStatus('Building + verifying...', true)
+        $('regenerateBtn').style.display = 'none' // Hide regenerate button
+        $('code').textContent = 'Generating and verifying code...'
+        const result = await post('/api/build-and-verify', {
+          question: question,
+          workedSolution: solution, 
+          subjectRules: subjectRules,
+          questionRules: questionRules,
+          questionId: CURRENT_ID || null
+        })
+        
+        $('code').textContent = result.code || ''
+        // Format powers/superscripts for readability in logs (escape then add <sup>)
+        const formatSuperscripts = (raw) => {
+          const escape = (s) => String(s || '')
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+          let html = escape(raw)
+          html = html
+            .replace(/cm\^(\d)/g, 'cm<sup>$1</sup>')
+            .replace(/dm\^(\d)/g, 'dm<sup>$1</sup>')
+            .replace(/dm\^-(\d+)/g, 'dm<sup>-$1</sup>')
+            .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
+            .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
+          return html
+        }
+        $('logs').innerHTML = formatSuperscripts(result.logs || '')
+        $('verdict').textContent = `Verdict: ${result.verdict}\nReason: ${result.reason}`
+        
+        if (result.verdict === 'pass') {
+          setStatus('Code verified ✓', false)
+          toast('Code verified', 'success')
+          updateWorkflowStep(3) // Move to Parameterize step
+          updateAdaptiveBadge()
+        } else {
+          setStatus('Verification failed', false)
+          alert('❌ Code verification failed. Please check the worked solution.')
+          toast('Verification failed', 'error')
+        }
+      } catch(e) { 
+        alert('Error: ' + (e.message || e))
+        $('code').textContent = 'Error occurred'
+        setStatus('Error', false)
+      }
+    }
+
+    // Step 2: Generate RNG parameters (only if verification passed)
+    $('rng').onclick = async () => {
+      try {
+        if (!$('code').textContent || $('verdict').textContent.includes('fail')) {
+          alert('Please build and verify the code first!')
+          return
+        }
+        
+        setStatus('Parameterizing...', true)
+        $('rngOut').textContent = 'Generating parameters...'
+        const result = await post('/api/parameterize', {
+          code: $('code').textContent,
+          question: $('q').value.trim(),
+          workedSolution: $('ws').value.trim(),
+          subjectRules: $('sr').value.trim(),
+          questionRules: $('qr').value.trim(),
+          questionId: CURRENT_ID || null
+        })
+        
+        if (result.ok && result.parameterization) {
+          const inputs = result.parameterization.inputs || {}
+          const inputCount = Object.keys(inputs).length
+          
+          $('rngOut').textContent = JSON.stringify(inputs, null, 2)
+          $('evalOut').textContent = result.parameterization.eval || ''
+          // Render reasons as bullet points
+          const reasonsRaw = String(result.parameterization.reasons || '').trim()
+          const bullets = reasonsRaw.split(/\n+/).map(l => l.replace(/^\s*[-*]\s*/, '').trim()).filter(Boolean)
+          $('reasonsOut').textContent = bullets.map(b => '- ' + b).join('\n')
+          // Show calculation snippet
+          $('calcOut').textContent = result.parameterization.calculation || ''
+          
+          // Store the complete parameterization for later use
+          window.PARAMETERIZATION = result.parameterization
+          
+          if (inputCount === 0) { setStatus('Parameterization returned no inputs', false); console.error('❌ Empty parameterization inputs:', result.parameterization) }
+          else { 
+            setStatus('Parameterization complete ✓', false)
+            console.log('📊 Parameterization inputs:', inputs)
+            updateWorkflowStep(4) // Move to Generate Runs step
+            toast('Parameters ready', 'success')
+          }
+        } else {
+          $('rngOut').textContent = 'Parameterization failed'
+          $('evalOut').textContent = result.rawResponse || 'No response'
+          setStatus('Parameterization failed', false)
+          
+          // Show regenerate button for failed parameterization
+          $('regenerateBtn').style.display = 'block'
+          $('regenerateBtn').onclick = () => {
+            $('regenerateBtn').style.display = 'none'
+            $('rng').click()
+          }
+          
+          alert('❌ Parameterization failed!')
+        }
+      } catch(e) { 
+        alert('Error: ' + (e.message || e))
+        setStatus('Error', false)
+      }
+    }
+
+    // Step 3: Generate question variations locally
+    let SELECTED_RUNS = []
+    $('gen').onclick = async () => {
+      try {
+        // Snapshot current parameterization to allow revert on failure
+        const __prevParamSnapshot = window.PARAMETERIZATION ? JSON.parse(JSON.stringify(window.PARAMETERIZATION)) : null
+        const __revertToParameterize = (msg) => {
+          if (__prevParamSnapshot) {
+            window.PARAMETERIZATION = __prevParamSnapshot
+            try {
+              const inputs = __prevParamSnapshot.inputs || {}
+              $('rngOut').textContent = JSON.stringify(inputs, null, 2)
+              $('evalOut').textContent = __prevParamSnapshot.eval || ''
+              $('reasonsOut').textContent = String(__prevParamSnapshot.reasons || '')
+              $('calcOut').textContent = __prevParamSnapshot.calculation || ''
+            } catch(_) {}
+          }
+          updateWorkflowStep(3)
+          setStatus(msg || 'Reverted to Parameterize – please adjust parameters', false)
+        }
+        // If parameterization missing (e.g., page refresh), auto-run parameterize
+        if (!window.PARAMETERIZATION || !window.PARAMETERIZATION.inputs || Object.keys(window.PARAMETERIZATION.inputs || {}).length === 0) {
+          console.log('ℹ️ No parameterization found. Auto-running parameterize...')
+          await $('rng').onclick()
+        }
+        const parameterization = window.PARAMETERIZATION
+        
+        if (!parameterization || !parameterization.inputs) {
+          alert('Please parameterize the code first!')
+          return
+        }
+        
+        if (Object.keys(parameterization.inputs).length === 0) {
+          alert('❌ No parameters found to randomize! The AI may not have identified any variable inputs. Check the parameterization step.')
+          console.error('Empty parameterization inputs:', parameterization)
+          return
+        }
+        
+        const need = Number($('num').value)
+        const maxAttempts = Math.max(100, need * 20)
+        const runs = []
+        
+        setStatus(`Generating ${need} variations...`, true)
+        $('runs').textContent = `Generating ${need} question variations (max ${maxAttempts} attempts)...`
+        
+        console.group(`Generating ${need} question variations`)
+        
+        for (let i = 0; i < maxAttempts && runs.length < need; i++) {
+          const logs = []
+          const mockConsole = { 
+            log: (...args) => logs.push(args.join(' '))
+          }
+          
+          try {
+            // Generate random parameters using the structured inputs
+            const params = {}
+            for (const [paramName, generationCode] of Object.entries(parameterization.inputs)) {
+              try {
+                // Sanitize common LLM RNG helpers into plain Math.random
+                let expr = String(generationCode || '')
+                  .replace(/\brandomNumber\b/g, 'Math.random')
+                  .replace(/\brandomFloat\b/g, 'randomFloat')
+                  .replace(/\brandomInt\b/g, 'randomInt')
+                  .replace(/\brandomBuretteVolume\b/g, 'randomBuretteVolume')
+                  .replace(/\brn\b(?=\()/g, 'Math.random')
+                  .replace(/(^|[^.])\brandom\(/g, '$1Math.random(')
+                  .replace(/\brand\b(?=\()/g, 'Math.random')
+                  .replace(/\brnd\b(?=\()/g, 'Math.random')
+                
+                // Convert helper-style functions to pure expressions
+                expr = expr.replace(/randomFloat\s*\(\s*([^,]+)\s*,\s*([^)]+)\)/g,
+                  '($1 + Math.random()*($2-($1)))')
+                expr = expr.replace(/randomInt\s*\(\s*([^,]+)\s*,\s*([^)]+)\)/g,
+                  'Math.floor(($1) + Math.random()*((($2)-($1))+1))')
+                expr = expr.replace(/randomBuretteVolume\s*\(\s*([^,]+)\s*,\s*([^)]+)\)/g,
+                  'Number((($1) + Math.random()*((($2)-($1)))).toFixed(2))')
+
+                // Allow referencing previously generated params in expressions
+                const generator = Function('Math', 'params', `with (params) { return ${expr} }`)
+                params[paramName] = generator(Math, params)
+                // Log generated values for debugging
+                console.log(`📊 Generated ${paramName} = ${params[paramName]} (from: ${expr})`)
+              } catch (genError) {
+                console.error(`Failed to generate ${paramName}:`, genError.message)
+                // Store detailed error context for planning
+                const exprForError = (typeof expr !== 'undefined' && expr) ? expr : String(generationCode || '')
+                window.__lastGenerationError = `Parameter generation error for ${paramName}: ${genError.message}
+Expression that failed: ${exprForError}
+All current parameters: ${JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)}
+Generated parameters so far: ${JSON.stringify(params, null, 2)}
+Error stack: ${genError.stack}`
+                params[paramName] = Math.random() * 10 // fallback
+                console.log(`📊 Fallback ${paramName} = ${params[paramName]}`)
+              }
+            }
+            
+            // Validate parameters using the eval function if provided
+            let paramsValid = true
+            if (parameterization.eval) {
+              try {
+                // Create evaluation environment with parameters available by name
+                const evalCode = `
+                  ${Object.entries(params).map(([name, value]) => `const ${name} = ${value};`).join('\n')}
+                  const evalFunc = ${parameterization.eval};
+                  const paramNames = [${Object.keys(params).map(k => `"${k}"`).join(', ')}];
+                  const paramValues = [${Object.keys(params).join(', ')}];
+                  return evalFunc.apply(null, paramValues);
+                `
+                const evalFunction = Function('Math', 'console', 'roundToSF', 'round3', 'round5', evalCode)
+                paramsValid = evalFunction(Math, console, roundToSF, round3, round5)
+              } catch (evalError) {
+                console.error(`Parameter validation failed:`, evalError.message)
+                // Store detailed error context for planning
+                window.__lastGenerationError = `Parameter validation error: ${evalError.message}
+Eval function that failed: ${parameterization.eval}
+Generated parameter values that FAILED validation: ${JSON.stringify(params, null, 2)}
+Parameter expressions used: ${JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)}
+Error stack: ${evalError.stack}`
+                // Do not accept parameters when validation throws
+                paramsValid = false
+              }
+            }
+            
+            if (!paramsValid) {
+              console.log(`❌ Attempt ${i + 1} failed: parameters failed validation`)
+              // Store detailed error context for planning - include actual generated values
+              window.__lastGenerationError = `Parameter validation failed: eval function returned false
+Eval function: ${parameterization.eval}
+Generated parameter values that FAILED validation: ${JSON.stringify(params, null, 2)}
+Parameter expressions used: ${JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)}
+Validation result: ${paramsValid}`
+              continue
+            }
+            
+            // Execute calculation with generated parameters
+            const calculationCode = parameterization.calculation || ''
+            
+            // Create execution environment with parameters
+            const paramDeclarations = Object.entries(params)
+              .map(([name, value]) => `const ${name} = ${value};`)
+              .join('\n')
+            
+            const combinedCode = `
+              ${paramDeclarations}
+              ${calculationCode}
+              return { params: { ${Object.keys(params).map(k => `${k}: ${k}`).join(', ')} } };
+            `
+            
+            const func = sandboxEval(combinedCode)
+            const result = func(roundToSF, round3, round5, mockConsole)
+            
+            // Extract final answer from logs
+            let final = null
+            const allLogs = logs.join('\n')
+            const finalMatch = allLogs.match(/Final answer:\s*([\d.]+)/i)
+            if (finalMatch) {
+              final = Number(finalMatch[1])
+            } else {
+              const lastLog = logs[logs.length - 1] || ''
+              const numberMatch = lastLog.match(/([\d.]+)/)
+              if (numberMatch) final = Number(numberMatch[1])
+            }
+            
+            const run = {
+              params: params,
+              logs: allLogs,
+              final
+            }
+            
+            if (final !== null && !isNaN(final) && paramsValid === true) {
+                runs.push(run)
+                // Display key parameters dynamically
+                const paramDisplay = Object.keys(params).slice(0, 3).map(key => 
+                  `${key}=${typeof params[key] === 'number' ? params[key].toFixed(2) : params[key]}`
+                ).join(', ')
+                console.log(`✅ Run ${runs.length}: ${paramDisplay}, final=${final}%`)
+            } else {
+              console.log(`❌ Attempt ${i + 1} failed: no valid final answer`)
+            }
+            
+          } catch (error) {
+            console.error(`❌ ATTEMPT ${i + 1} FAILED:`, error.message)
+            console.error('🔍 Error details:', error)
+            try {
+              window.__lastGenerationError = [
+                `Run-time error during calculation execution: ${error.message}`,
+                '--- Generated parameter values that caused the error ---',
+                JSON.stringify(params || {}, null, 2),
+                '--- Calculation code ---',
+                String(calculationCode || ''),
+                '--- Parameter declarations ---',
+                String(paramDeclarations || ''),
+                '--- Eval function ---',
+                String(parameterization.eval || ''),
+                '--- Parameter expressions ---',
+                JSON.stringify(window.PARAMETERIZATION?.inputs || {}, null, 2),
+                '--- Logs so far ---',
+                logs.join('\n')
+              ].join('\n')
+            } catch(_) {}
+          }
+        }
+        
+        console.groupEnd()
+        
+        SELECTED_RUNS = runs
+        // Pretty-print runs with superscripts for units
+        const prettyRuns = JSON.stringify(runs, null, 2)
+          .replace(/cm\^(\d)/g, 'cm<sup>$1</sup>')
+          .replace(/dm\^(\d)/g, 'dm<sup>$1</sup>')
+          .replace(/dm\^-(\d+)/g, 'dm<sup>-$1</sup>')
+          .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
+          .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
+        $('runs').innerHTML = prettyRuns
+        
+        if (runs.length >= need) {
+          console.log(`✅ Generated ${runs.length} successful variations! Auto-creating final questions...`)
+          setStatus('Generated variations ✓', false)
+          updateWorkflowStep(5) // Move to Compose Questions step
+          toast('Generated variations', 'success')
+          
+          // Save verified code + parameterization immediately after successful runs
+          if (CURRENT_ID && $('code').textContent) {
+            try {
+              const headers = { 'Content-Type': 'application/json' }
+              const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+              if (token) headers['Authorization'] = 'Bearer ' + token
+              await fetch(`/api/questions/${CURRENT_ID}/code`, { 
+                method: 'POST', headers, 
+                body: JSON.stringify({ 
+                  code: $('code').textContent,
+                  parameterization: window.PARAMETERIZATION || null
+                }) 
+              })
+              console.log('💾 Saved code + parameterization after Generate Runs')
+              toast('Saved code + parameters', 'success')
+            } catch (e) {
+              console.warn('Failed to save after runs:', e)
+            }
+          }
+          
+              // Auto-execute "Create Final Questions"
+              setTimeout(() => {
+                $('compose').click()
+              }, 1000)
+            } else {
+          // Show regenerate button for failed generation
+          $('regenerateBtn').style.display = 'block'
+          $('regenerateBtn').onclick = () => {
+            // Clear previous errors and retry
+            window.__planningAttempts = 0
+            window.__planningHistory = []
+            window.__currentAlternatives = []
+            window.__alternativeIndex = 0
+            $('regenerateBtn').style.display = 'none'
+            $('gen').click()
+          }
+          
+          // Auto-plan with clear user feedback
+          if (!window.__planningAttempts) window.__planningAttempts = 0
+          if (!window.__currentAlternatives) window.__currentAlternatives = []
+          if (!window.__alternativeIndex) window.__alternativeIndex = 0
+          
+          // First check if we have unused alternatives from previous planning call
+          if (window.__currentAlternatives.length > 0 && window.__alternativeIndex < window.__currentAlternatives.length) {
+            // Try next alternative from current set
+            const alt = window.__currentAlternatives[window.__alternativeIndex]
+            console.group(`🔄 TRYING ALTERNATIVE ${window.__alternativeIndex + 1}/3 FROM PLANNING CALL ${window.__planningAttempts}`)
+            console.log('📊 Alternative name:', alt.name)
+            console.log('📊 Alternative inputs:', JSON.stringify(alt.inputs, null, 2))
+            console.log('📊 Previous runs generated:', runs.length, '/', need)
+            
+            // Update inputs with this alternative
+            window.PARAMETERIZATION.inputs = alt.inputs
+            $('rngOut').textContent = JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)
+            
+            window.__alternativeIndex++
+            setStatus(`🔄 Trying alternative ${window.__alternativeIndex}/3 from planning call ${window.__planningAttempts}...`, true)
+            
+            console.log('⏰ Retrying generation in 500ms...')
+            console.groupEnd()
+            
+            // Retry generation with this alternative
+            setTimeout(() => {
+              setStatus(`Retrying with alternative ${window.__alternativeIndex}/3...`, true)
+              $('gen').click()
+            }, 500)
+            return
+          }
+          
+          // All alternatives from current planning call exhausted, make new planning call
+          if (window.__planningAttempts < 3) {
+            window.__planningAttempts++
+            window.__alternativeIndex = 0 // Reset for new planning call
+            
+            // Show clear status to user about what's happening  
+            setStatus(`🧭 Auto-planning better parameters (${window.__planningAttempts}/3)...`, true)
+            console.group(`🧭 AUTO-PLANNING ATTEMPT ${window.__planningAttempts}/3 - Getting 3 new alternatives`)
+            console.log('📊 Current runs generated:', runs.length, '/', need)
+            console.log('📋 Current inputs:', JSON.stringify(window.PARAMETERIZATION.inputs, null, 2))
+            console.log('🔍 Current eval function:', window.PARAMETERIZATION.eval?.substring(0, 200) + '...')
+            
+            // Track planning history and capture last (most recent) error only
+            if (!window.__planningHistory) window.__planningHistory = []
+            if (!window.__lastGenerationError) window.__lastGenerationError = null
+            
+            const currentAttempt = {
+              attempt: window.__planningAttempts,
+              runsGenerated: runs.length,
+              targetRuns: need,
+              inputs: { ...window.PARAMETERIZATION.inputs },
+              lastError: window.__lastGenerationError,
+              timestamp: new Date().toISOString()
+            }
+            
+            let __planErrorMsg = null
+            try {
+              const planResp = await post('/api/plan-params', {
+                question: $('q').value,
+                workedSolution: $('ws').value,
+                code: $('code').textContent,
+              subjectRules: $('sr').value,
+                questionRules: $('qr').value,
+                current: window.PARAMETERIZATION,
+                previousAttempts: window.__planningHistory?.slice(-1) || [],
+                lastError: window.__lastGenerationError ? 
+                  (window.__lastGenerationError.length > 2000 ? 
+                    window.__lastGenerationError.substring(0, 2000) + '... [truncated for efficiency]' : 
+                    window.__lastGenerationError) : null,
+                questionId: CURRENT_ID || null
+              })
+              
+              console.log('📤 Planning response:', planResp)
+              
+              if (planResp.ok) {
+                console.log('✅ Planning successful!')
+                console.log('🧭 Plan rationale:', (planResp.plan || []).join('\n   - '))
+                console.log('🎯 New inputs (Alternative 1):', JSON.stringify(planResp.inputs, null, 2))
+                
+                // Store ALL alternatives for cycling through them
+                window.__currentAlternatives = planResp.alternatives || []
+                window.__alternativeIndex = 1 // We're about to try alternative 1, so next will be 2
+                
+                if (planResp.alternatives) {
+                  console.log('📋 All 3 alternatives stored for cycling:')
+                  planResp.alternatives.forEach((alt, i) => {
+                    console.log(`   ${i + 1}. ${alt.name}:`, JSON.stringify(alt.inputs, null, 2))
+                  })
+                  console.log('🔄 Will try alternatives 2 and 3 if alternative 1 fails')
+                }
+                
+                // Update with new inputs (Alternative 1)
+                const oldInputs = { ...window.PARAMETERIZATION.inputs }
+                window.PARAMETERIZATION.inputs = planResp.inputs || window.PARAMETERIZATION.inputs
+                $('rngOut').textContent = JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)
+                
+                console.log('🔄 Updated inputs from:', JSON.stringify(oldInputs, null, 2))
+                console.log('🔄 Updated inputs to:', JSON.stringify(window.PARAMETERIZATION.inputs, null, 2))
+                
+                // Update planning history
+                currentAttempt.success = true
+                currentAttempt.newInputs = { ...window.PARAMETERIZATION.inputs }
+                currentAttempt.plan = planResp.plan
+                window.__planningHistory.push(currentAttempt)
+                
+                // Update planning history display
+                $('planHistory').textContent = JSON.stringify(window.__planningHistory, null, 2)
+                
+                setStatus('New params planned ✓ Retrying generation...', true)
+                console.log('⏰ Retrying generation in 500ms...')
+                console.groupEnd()
+                
+                // Retry generation immediately
+                setTimeout(() => {
+                  setStatus(`Trying alternative 1/3 from planning call ${window.__planningAttempts}/3...`, true)
+                  $('gen').click()
+                }, 500)
+                return
+        } else {
+                console.error('❌ Planning failed:', planResp.error || 'Unknown error')
+                __planErrorMsg = planResp?.error || 'Planning failed'
+              }
+            } catch (e) {
+              console.error('❌ Auto-planning exception:', e)
+              console.error('🔍 Error details:', e.message, e.stack)
+              __planErrorMsg = e?.message || 'Planning exception'
+            }
+            
+            // Record failed attempt
+            currentAttempt.success = false
+            currentAttempt.error = __planErrorMsg || 'Planning failed'
+            window.__planningHistory.push(currentAttempt)
+            $('planHistory').textContent = JSON.stringify(window.__planningHistory, null, 2)
+            console.groupEnd()
+        } else {
+            // All 3 planning calls × 3 alternatives each = 9 total attempts exhausted
+            setStatus('All planning alternatives exhausted', false)
+            console.error('❌ All 9 planning alternatives exhausted (3 calls × 3 alternatives each)')
+            alert(`❌ Unable to generate enough variations after trying 9 alternatives across 3 planning calls. Generated ${runs.length}/${need} variations.`)
+            __revertToParameterize('All planning alternatives exhausted – please adjust parameters manually')
+            return
+          }
+          
+          // Fallback message (shouldn't reach here normally)
+          setStatus('Not enough variations', false)
+          // No extra popup here to reduce noise; user can retry or plan
+        }
+        
+      } catch (e) {
+        console.error('Generate error:', e)
+        __revertToParameterize('Generation error – reverted to Parameterize')
+      }
+    }
+
+    // Planning: widen params via o3/gpt-5
+    $('plan').onclick = async () => {
+      try {
+        const parameterization = window.PARAMETERIZATION
+        if (!parameterization) { alert('Please parameterize first.'); return }
+        
+        // 🔄 RESET STATE - Treat each manual retry as fresh start
+        console.log('🔄 Resetting planning state for fresh retry...')
+        window.__planningAttempts = 0
+        window.__planningHistory = []
+        window.__lastGenerationError = null
+        window.__currentAlternatives = []
+        window.__alternativeIndex = 0
+        $('planHistory').textContent = JSON.stringify([], null, 2)
+        
+        console.group('🧭 MANUAL PLANNING BETTER PARAMS (FRESH START)')
+        console.log('📋 Current inputs:', JSON.stringify(parameterization.inputs, null, 2))
+        console.log('🔍 Current eval function:', parameterization.eval?.substring(0, 200) + '...')
+        
+        setStatus('Planning better params...', true)
+        const planResp = await post('/api/plan-params', {
+          question: $('q').value,
+          workedSolution: $('ws').value,
+          code: $('code').textContent,
+          subjectRules: $('sr').value,
+          questionRules: $('qr').value,
+          current: parameterization,
+          lastError: window.__lastGenerationError ? 
+            (window.__lastGenerationError.length > 2000 ? 
+              window.__lastGenerationError.substring(0, 2000) + '... [truncated for efficiency]' : 
+              window.__lastGenerationError) : null,
+          questionId: CURRENT_ID || null
+        })
+        
+        console.log('📤 Planning response:', planResp)
+        
+        if (planResp.ok) {
+          console.log('✅ Planning successful!')
+          console.log('🧭 Plan rationale:', (planResp.plan || []).join('\n   - '))
+          console.log('🎯 New inputs (Alternative 1):', JSON.stringify(planResp.inputs, null, 2))
+          
+          if (planResp.alternatives) {
+            console.log('📋 All alternatives:')
+            planResp.alternatives.forEach((alt, i) => {
+              console.log(`   ${i + 1}. ${alt.name}:`, JSON.stringify(alt.inputs, null, 2))
+            })
+          }
+          
+          // Replace only inputs with planned ones
+          const oldInputs = { ...window.PARAMETERIZATION.inputs }
+          window.PARAMETERIZATION.inputs = planResp.inputs || window.PARAMETERIZATION.inputs
+          $('rngOut').textContent = JSON.stringify(window.PARAMETERIZATION.inputs, null, 2)
+          
+          console.log('🔄 Updated inputs from:', JSON.stringify(oldInputs, null, 2))
+          console.log('🔄 Updated inputs to:', JSON.stringify(window.PARAMETERIZATION.inputs, null, 2))
+          
+          setStatus('Planned new params ✓', false)
+          console.groupEnd()
+          alert('New parameter ranges planned. Try Generate Variations again.')
+        } else { 
+          console.error('❌ Planning failed:', planResp.error || 'Unknown error')
+          console.groupEnd()
+          alert('Planning failed: ' + (planResp.error || 'Unknown error')) 
+        }
+      } catch (e) {
+        console.error('❌ Planning exception:', e)
+        console.error('🔍 Error details:', e.message, e.stack)
+        console.groupEnd()
+        alert('Planning error: ' + (e.message || e))
+        setStatus('Error', false)
+      }
+    }
+
+    // Step 4: Create final questions with GPT-4o-mini
+    $('compose').onclick = async () => {
+      try {
+        // Prevent double-clicks by disabling the button
+        const composeBtn = $('compose')
+        if (composeBtn.disabled) {
+          console.log('⚠️ Compose already in progress, ignoring click')
+          return
+        }
+        
+        if (!SELECTED_RUNS.length) {
+          alert('Please generate question variations first!')
+          return
+        }
+        
+        // Disable button to prevent multiple clicks
+        composeBtn.disabled = true
+        composeBtn.style.opacity = '0.6'
+        
+        const n = Number($('num').value)
+        const availableRuns = Math.min(n, SELECTED_RUNS.length)
+        
+        // Get selected model
+        const selectedModel = document.querySelector('input[name="qaModel"]:checked').value
+        const modelName = selectedModel === 'groq' ? 'Groq (openai/gpt-oss-120b)' : 'OpenAI (gpt-4.1-mini)'
+        
+        setStatus(`Composing with ${modelName}...`, true)
+        $('qa').innerHTML = `<div style="text-align: center; color: var(--muted); padding: 20px;">Creating ${availableRuns} final questions using ${modelName}...</div>`
+        
+        const result = await post('/api/compose-qa', {
+          question: $('q').value,
+          subjectRules: $('sr').value,
+          questionRules: $('qr').value,
+          runs: SELECTED_RUNS.slice(0, availableRuns),
+          n: availableRuns,
+          model: selectedModel,
+          questionId: CURRENT_ID || null
+        })
+        
+        // Helper: formatting replacements (convert ^ into <sup> where applicable)
+        const formatText = (text) => {
+          const escape = (s) => String(s || 'No content')
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+          return escape(text)
+          .replace(/### /g, '<h3>')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>')
+          .replace(/<h3>/g, '</p><h3>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // caret-power conversions
+            .replace(/cm\^(\d)/g, 'cm<sup>$1</sup>')
+            .replace(/dm\^(\d)/g, 'dm<sup>$1</sup>')
+            .replace(/m\^(\d)/g, 'm<sup>$1</sup>')
+            .replace(/dm\^-(\d+)/g, 'dm<sup>-$1</sup>')
+            .replace(/m\^-(\d+)/g, 'm<sup>-$1</sup>')
+            .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
+            .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
+            // unicode superscripts and subscripts
+          .replace(/⁻¹/g, '<sup>-1</sup>')
+          .replace(/⁻²/g, '<sup>-2</sup>')
+          .replace(/⁻³/g, '<sup>-3</sup>')
+          .replace(/⁻⁴/g, '<sup>-4</sup>')
+          .replace(/²/g, '<sup>2</sup>')
+          .replace(/³/g, '<sup>3</sup>')
+          .replace(/⁴/g, '<sup>4</sup>')
+          .replace(/₀/g, '<sub>0</sub>')
+          .replace(/₁/g, '<sub>1</sub>')
+          .replace(/₂/g, '<sub>2</sub>')
+          .replace(/₃/g, '<sub>3</sub>')
+          .replace(/₄/g, '<sub>4</sub>')
+          .replace(/×/g, '&times;')
+          .replace(/÷/g, '&divide;')
+          .replace(/→/g, '&rarr;')
+          .replace(/←/g, '&larr;')
+          .replace(/↔/g, '&harr;')
+          .replace(/≈/g, '&asymp;')
+          .replace(/≤/g, '&le;')
+          .replace(/≥/g, '&ge;')
+          .replace(/θ/g, '&theta;')
+          .replace(/π/g, '&pi;')
+          .replace(/α/g, '&alpha;')
+          .replace(/β/g, '&beta;')
+          .replace(/γ/g, '&gamma;')
+          .replace(/Δ/g, '&Delta;')
+          .replace(/δ/g, '&delta;')
+        }
+
+        // Render structured QA array with copy-friendly formatting
+        let html = ''
+        let plainText = '' // For easy copying
+        
+        if (Array.isArray(result.qa)) {
+          html = '<div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">' +
+                 '<button id="copyAllQuestions" class="btn secondary" style="margin-bottom: 16px;">📋 Copy All Questions</button>' +
+                 '<button id="downloadWord" class="btn secondary" style="margin-bottom: 16px;">⬇️ Download as Word</button>' +
+                 '</div>'
+          
+          result.qa.forEach((item, idx) => {
+            const q = formatText(item.question)
+            const w = formatText(item.workedSolution)
+            
+            // HTML version for display
+            html += '<div class="math-content" style="margin-bottom: 24px;">' +
+                   '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">' +
+                   '<h3 style="margin: 0;">Question ' + (idx + 1) + '</h3>' +
+                   '<button class="btn secondary copy-question" data-index="' + idx + '" style="padding: 6px 10px; font-size: 12px;">📋 Copy</button>' +
+                   '</div>' +
+                   '<div class="question-text" style="margin-bottom: 16px;">' + q + '</div>' +
+                   '<h4 style="margin: 12px 0 8px 0;">Worked Solution</h4>' +
+                   '<div class="solution-text">' + w + '</div>' +
+                   '</div>'
+            
+            // Plain text version for copying
+            plainText += `Question ${idx + 1}\n\n${item.question.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}\n\nWorked Solution\n\n${item.workedSolution.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}\n\n${'='.repeat(60)}\n\n`
+          })
+          
+          // Store plain text for copying
+          window.QUESTIONS_PLAIN_TEXT = plainText
+          window.QUESTIONS_DATA = result.qa
+          
+        } else {
+          html = '<div class="math-content"><p>' + formatText(result.qa || 'No questions generated') + '</p></div>'
+        }
+
+        $('qa').innerHTML = html
+        
+        // Add copy functionality
+        if (Array.isArray(result.qa)) {
+          // Copy all questions
+          $('copyAllQuestions').onclick = () => {
+            navigator.clipboard.writeText(window.QUESTIONS_PLAIN_TEXT).then(() => {
+              const btn = $('copyAllQuestions')
+              const originalText = btn.textContent
+              btn.textContent = '✅ Copied!'
+              setTimeout(() => btn.textContent = originalText, 2000)
+            }).catch(err => {
+              console.error('Copy failed:', err)
+              alert('Copy failed. Please select and copy manually.')
+            })
+          }
+
+          // Download as Microsoft Word (.doc) using HTML compatibility
+          $('downloadWord').onclick = () => {
+            try {
+              const title = ($('questionTitle').value || 'questions').trim() || 'questions'
+              const safeTitle = title.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').toLowerCase()
+              const now = new Date()
+              const ts = now.toISOString().slice(0,19).replace(/[-:T]/g, '')
+
+              // Build Word-friendly HTML document
+              let bodyHtml = ''
+              window.QUESTIONS_DATA.forEach((item, idx) => {
+                const qHtml = formatText(item.question)
+                const wHtml = formatText(item.workedSolution)
+                bodyHtml += '<div style="margin-bottom:28px; page-break-inside: avoid;">' +
+                            '<h2 style="margin:0 0 8px 0;">Question ' + (idx + 1) + '</h2>' +
+                            '<div style="margin:0 0 12px 0;">' + qHtml + '</div>' +
+                            '<h3 style="margin:12px 0 6px 0;">Worked Solution</h3>' +
+                            '<div>' + wHtml + '</div>' +
+                            '</div>' +
+                            (idx < window.QUESTIONS_DATA.length - 1 ? '<div style="page-break-after: always;"></div>' : '')
+              })
+
+              const docHtml = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8" />
+  <title>${title}</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>90</w:Zoom></w:WordDocument></xml><![endif]-->
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #000; }
+    h2, h3 { font-weight: 600; }
+    .math-content sup { vertical-align: super; font-size: 0.8em; }
+    .math-content sub { vertical-align: sub; font-size: 0.8em; }
+    p { line-height: 1.45; }
+  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="format-detection" content="date=no" />
+  <meta name="format-detection" content="address=no" />
+  <meta name="format-detection" content="email=no" />
+  <style media="print"> @page { margin: 1in; } </style>
+  <style> .page-break { page-break-after: always; } </style>
+  </head>
+<body>
+  <h1 style="margin-top:0;">${title}</h1>
+  ${bodyHtml}
 </body>
-</html> 
+</html>`
+
+              const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `${safeTitle}_${ts}.doc`
+              document.body.appendChild(a)
+              a.click()
+              setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 0)
+              toast('Word file downloaded', 'success')
+            } catch (err) {
+              console.error('Word export failed:', err)
+              alert('Word export failed. Please try Copy All as a fallback.')
+              toast('Word export failed', 'error')
+            }
+          }
+          
+          // Copy individual questions
+          document.querySelectorAll('.copy-question').forEach(btn => {
+            btn.onclick = () => {
+              const index = parseInt(btn.dataset.index)
+              const item = window.QUESTIONS_DATA[index]
+              const text = `Question ${index + 1}\n\n${item.question.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}\n\nWorked Solution\n\n${item.workedSolution.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ')}`
+              
+              navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.textContent
+                btn.textContent = '✅'
+                setTimeout(() => btn.textContent = originalText, 2000)
+              }).catch(err => {
+                console.error('Copy failed:', err)
+                alert('Copy failed. Please select and copy manually.')
+              })
+            }
+          })
+        }
+        
+        // Keep spinner running while processing DOM
+        setStatus('Finalizing questions...', true)
+        
+        if (result.ok) {
+          console.log(`✅ Generated ${result.count} final questions!`)
+          
+          // Save verified code after successful question generation
+          if (CURRENT_ID && $('code').textContent) {
+            try {
+              const headers = { 'Content-Type': 'application/json' }
+              const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
+              if (token) headers['Authorization'] = 'Bearer ' + token
+              await fetch(`/api/questions/${CURRENT_ID}/code`, { 
+                method: 'POST', headers, 
+                body: JSON.stringify({ 
+                  code: $('code').textContent,
+                  parameterization: window.PARAMETERIZATION || null
+                }) 
+              })
+              console.log('💾 Verified code saved to DB after successful question generation')
+            } catch (e) {
+              console.warn('Failed to save verified code:', e)
+            }
+          }
+          
+          // Display validation results
+          if (result.validation) {
+            console.log('🔍 Validation Results:')
+            result.validation.forEach(msg => console.log('  ' + msg))
+          }
+          
+          // Display expected answers for comparison
+          if (result.expectedAnswers) {
+            console.log('📊 Expected Final Answers:')
+            result.expectedAnswers.forEach(answer => console.log('  ' + answer))
+          }
+        }
+        
+        // Finally complete the workflow
+        setStatus('All done ✓', false)
+        toast('Workflow complete', 'success')
+        updateWorkflowStep(6, true) // Complete workflow!
+        
+      } catch (e) {
+        alert('Error: ' + (e.message || e))
+        setStatus('Error', false)
+      } finally {
+        // Always re-enable the button
+        const composeBtn = $('compose')
+        composeBtn.disabled = false
+        composeBtn.style.opacity = '1'
+        console.log('✅ Compose button re-enabled')
+      }
+    }
+
+    // One-click flow (adaptive)
+    document.getElementById('runAll').onclick = async () => {
+      try { 
+        setStatus('Running full workflow...', true)
+        // Ensure the question itself is saved first so we have a stable CURRENT_ID
+        if (!CURRENT_ID) {
+          try {
+            setStatus('Saving question...', true)
+            await saveCurrentQuestion()
+          } catch (e) {
+            console.error('Auto-save before Run All failed:', e)
+            setStatus('Save failed – please fix required fields', false)
+            return
+          }
+        }
+        const isVerified = Boolean($('code').textContent && !$('verdict').textContent.includes('fail'))
+        if (isVerified) {
+          // Skip build; ensure parameterization → runs → compose
+          if (!window.PARAMETERIZATION || !window.PARAMETERIZATION.inputs) {
+            await document.getElementById('rng').onclick()
+          }
+          await document.getElementById('gen').onclick()
+          
+          // Only proceed to compose if we have generated runs
+          if (SELECTED_RUNS.length > 0) {
+            await document.getElementById('compose').onclick()
+          } else {
+            setStatus('Generate Runs failed - workflow stopped', false)
+            return
+          }
+        } else {
+          await document.getElementById('build').onclick()
+          await document.getElementById('rng').onclick()
+          await document.getElementById('gen').onclick()
+          
+          // Only proceed to compose if we have generated runs
+          if (SELECTED_RUNS.length > 0) {
+            await document.getElementById('compose').onclick()
+          } else {
+            setStatus('Generate Runs failed - workflow stopped', false)
+            return
+          }
+        }
+        setStatus('Workflow complete ✓', false)
+        updateAdaptiveBadge()
+      } catch (e) {
+        console.error('Workflow error:', e)
+        setStatus('Workflow error', false)
+        toast('Workflow error', 'error')
+      }
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      // Theme: restore preference
+      try {
+        const savedTheme = localStorage.getItem('qct.theme')
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', savedTheme)
+          $('themeIcon').textContent = savedTheme === 'light' ? '🌞' : '🌙'
+        }
+      } catch(_) {}
+
+      // Load Supabase from CDN
+      if (!window.supabase) {
+        const s = document.createElement('script')
+        s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.3/dist/umd/supabase.min.js'
+        document.head.appendChild(s)
+        await new Promise(res => s.onload = res)
+      }
+      await initAuth()
+      // refreshSubjects is now called inside initAuth after authentication check
+      updateWorkflowStep(1) // Initialize workflow
+      setDevMode(detectDevModeFromQuery())
+      updateAdaptiveBadge()
+      updateCreditCard()
+    })
+
+    // Theme toggle with sleek SVG icon
+    function setThemeIcon(theme) {
+      const svg = document.getElementById('themeIconSvg')
+      if (!svg) return
+      // For simplicity we keep the same sun glyph; stroke color adapts
+      svg.style.opacity = 1
+    }
+    
+    function updateCreditCard() {
+      const credit = document.getElementById('creditCard')
+      if (!credit) return
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      if (isLight) {
+        credit.style.background = 'rgba(0,0,0,0.08)'
+        credit.style.color = 'rgba(0,0,0,0.7)'
+      } else {
+        credit.style.background = 'rgba(255,255,255,0.06)'
+        credit.style.color = 'rgba(255,255,255,0.6)'
+      }
+    }
+    
+    function preserveContentDuringThemeSwitch() {
+      // Ensure all content elements remain visible and properly styled
+      const contentElements = ['q', 'ws', 'sr', 'qr', 'questionTitle', 'code', 'verdict', 'runs', 'qa']
+      contentElements.forEach(id => {
+        const el = $(id)
+        if (el && el.style) {
+          // Remove any inline styles that might hide content
+          el.style.opacity = ''
+          el.style.display = ''
+          el.style.visibility = ''
+        }
+      })
+      
+      // Force repaint to ensure CSS variables are applied
+      document.body.offsetHeight
+    }
+
+    $('themeToggle').onclick = () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark'
+      const next = current === 'dark' ? 'light' : 'dark'
+      
+      console.log(`Switching theme from ${current} to ${next}`)
+      
+      document.documentElement.setAttribute('data-theme', next)
+      setThemeIcon(next)
+      updateAdaptiveBadge()
+      updateCreditCard()
+      
+      // Preserve content visibility during theme switch
+      preserveContentDuringThemeSwitch()
+      
+      try { localStorage.setItem('qct.theme', next) } catch(_) {}
+      
+      console.log('Theme switch complete')
+    }
+
+    // Analytics session management
+    function getClientSessionId() {
+      try { return localStorage.getItem('qct.analytics.sessionId') || null } catch(_) { return null }
+    }
+    function setClientSessionId(id) {
+      try { if (id) localStorage.setItem('qct.analytics.sessionId', id) } catch(_) {}
+    }
+
+    async function startAnalyticsSession() {
+      try {
+        console.log('📊 Starting analytics session...')
+        const response = await post('/api/session/start', { clientSessionId: getClientSessionId() })
+        if (response.ok) {
+          console.log('📊 Analytics session started')
+          if (response.sessionId) setClientSessionId(response.sessionId)
+        }
+      } catch (e) {
+        console.warn('📊 Analytics session start failed:', e.message)
+        // Don't fail the app if analytics fail
+      }
+    }
+
+    async function endAnalyticsSession() {
+      try {
+        console.log('📊 Ending analytics session...')
+        await post('/api/session/end', {})
+        console.log('📊 Analytics session ended')
+        try { localStorage.removeItem('qct.analytics.sessionId') } catch(_) {}
+      } catch (e) {
+        console.warn('📊 Analytics session end failed:', e.message)
+        // Don't fail the app if analytics fail
+      }
+    }
+  </script>
+  <!-- Tiny credit card -->
+  <div id="creditCard" style="position: fixed; right: 10px; bottom: 10px; padding: 6px 8px; border-radius: 6px; font-size: 11px; backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,0.25); z-index: 9999;">Built by Kuang Wen</div>
+</body>
+</html>
+
+
