@@ -603,17 +603,17 @@
       <input id="num" type="range" value="3" min="1" max="10" oninput="document.getElementById('numDisplay').textContent = this.value" />
       <div class="caption">Drag to choose how many variations you want.</div>
     </div>
-    <div class="col slider-section" style="display:none;">
+    <div class="col slider-section">
       <label>Question Generation Model:</label>
       <div class="model-selector">
         <label class="radio-option">
-          <input type="radio" name="qaModel" value="groq">
+          <input type="radio" name="qaModel" value="groq" checked>
           <span class="radio-custom"></span>
           <span class="radio-label">Groq (openai/gpt-oss-120b)</span>
           <span class="model-badge fast">Fast</span>
         </label>
         <label class="radio-option">
-          <input type="radio" name="qaModel" value="gpt-4.1-mini" checked>
+          <input type="radio" name="qaModel" value="gpt-4.1-mini">
           <span class="radio-custom"></span>
           <span class="radio-label">OpenAI (gpt-4.1-mini)</span>
           <span class="model-badge quality">High Quality</span>
@@ -670,15 +670,6 @@
   </div>
     </div>
   </details>
-
-  <!-- AI Debug Panel (you can set display:none when done testing) -->
-  <div id="aiDebugPanel" class="card" style="display:none; margin-top:20px; padding:12px;">
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-      <h4 style="margin:0;">AI Debug Output</h4>
-      <button id="clearAiDebug" class="btn secondary" style="margin-left:auto; padding:6px 10px; font-size:12px;">Clear</button>
-    </div>
-    <pre id="aiDebugContent" style="white-space:pre-wrap; max-height:260px; overflow:auto;"></pre>
-  </div>
 
   <script>
     const $ = (id) => document.getElementById(id)
@@ -1274,27 +1265,6 @@
       return r.json()
     }
     
-    // Debug logger shown at bottom of the page
-    function logAIStep(step, payload) {
-      try {
-        const container = $('aiDebugContent')
-        if (!container) return
-        const ts = new Date().toLocaleTimeString()
-        const toStringSafe = (v) => {
-          if (v == null) return ''
-          if (typeof v === 'string') return v
-          try { return JSON.stringify(v, null, 2) } catch(_) { return String(v) }
-        }
-        const escape = (s) => String(s || '')
-          .replace(/&/g,'&amp;')
-          .replace(/</g,'&lt;')
-          .replace(/>/g,'&gt;')
-        const block = '[' + ts + '] ' + step + '\n' + escape(toStringSafe(payload)) + '\n' + '-'.repeat(50)
-        container.textContent += (container.textContent ? '\n' : '') + block
-        container.scrollTop = container.scrollHeight
-      } catch (_) {}
-    }
-    
     // Dev mode detection: ?dev=1 or Shift+D toggle
     function detectDevModeFromQuery() {
       try { const u = new URL(window.location.href); return u.searchParams.get('dev') === '1' } catch(_) { return false }
@@ -1537,10 +1507,6 @@
         }
         $('logs').innerHTML = formatSuperscripts(result.logs || '')
         $('verdict').textContent = `Verdict: ${result.verdict}\nReason: ${result.reason}`
-        // Debug panel entries
-        logAIStep('Build & Verify: Generated Code', result.code || '')
-        logAIStep('Build & Verify: Verification Logs', result.logs || '')
-        logAIStep('Build & Verify: Verdict', { verdict: result.verdict, reason: result.reason })
         
         if (result.verdict === 'pass') {
           setStatus('Code verified ✓', false)
@@ -1556,7 +1522,6 @@
         alert('Error: ' + (e.message || e))
         $('code').textContent = 'Error occurred'
         setStatus('Error', false)
-        logAIStep('Build & Verify: Error', e?.message || e)
       }
     }
 
@@ -1594,11 +1559,6 @@
           
           // Store the complete parameterization for later use
           window.PARAMETERIZATION = result.parameterization
-          // Debug panel entries
-          logAIStep('Parameterize: Inputs', inputs)
-          logAIStep('Parameterize: Eval Function', result.parameterization.eval || '')
-          logAIStep('Parameterize: Calculation Code', result.parameterization.calculation || '')
-          logAIStep('Parameterize: Reasons', bullets.join('\n'))
           
           if (inputCount === 0) { setStatus('Parameterization returned no inputs', false); console.error('❌ Empty parameterization inputs:', result.parameterization) }
           else { 
@@ -1611,7 +1571,6 @@
           $('rngOut').textContent = 'Parameterization failed'
           $('evalOut').textContent = result.rawResponse || 'No response'
           setStatus('Parameterization failed', false)
-          logAIStep('Parameterize: Failed Raw Response', result.rawResponse || 'No response')
           
           // Show regenerate button for failed parameterization
           $('regenerateBtn').style.display = 'block'
@@ -1625,7 +1584,6 @@
       } catch(e) { 
         alert('Error: ' + (e.message || e))
         setStatus('Error', false)
-        logAIStep('Parameterize: Error', e?.message || e)
       }
     }
 
@@ -1843,9 +1801,6 @@ Validation result: ${paramsValid}`
           .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
           .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
         $('runs').innerHTML = prettyRuns
-        // Debug panel entries
-        logAIStep('Generate Runs: Summary', { requested: need, generated: runs.length, attempts: maxAttempts })
-        logAIStep('Generate Runs: Runs Data', runs)
         
         if (runs.length >= need) {
           console.log(`✅ Generated ${runs.length} successful variations! Auto-creating final questions...`)
@@ -1878,7 +1833,6 @@ Validation result: ${paramsValid}`
                 $('compose').click()
               }, 1000)
             } else {
-          logAIStep('Generate Runs: Incomplete', 'Not enough valid variations produced')
           // Show regenerate button for failed generation
           $('regenerateBtn').style.display = 'block'
           $('regenerateBtn').onclick = () => {
@@ -2151,8 +2105,6 @@ Validation result: ${paramsValid}`
         
         const result = await post('/api/compose-qa', {
           question: $('q').value,
-          workedSolution: $('ws').value,
-          code: $('code').textContent,
           subjectRules: $('sr').value,
           questionRules: $('qr').value,
           runs: SELECTED_RUNS.slice(0, availableRuns),
@@ -2160,9 +2112,6 @@ Validation result: ${paramsValid}`
           model: selectedModel,
           questionId: CURRENT_ID || null
         })
-        // Debug panel entries
-        logAIStep('Compose Q&A: Model', modelName)
-        logAIStep('Compose Q&A: Result', { count: result?.count, qa: result?.qa })
         
         // Helper: formatting replacements (convert ^ into <sup> where applicable)
         const formatText = (text) => {
@@ -2400,7 +2349,6 @@ Validation result: ${paramsValid}`
       } catch (e) {
         alert('Error: ' + (e.message || e))
         setStatus('Error', false)
-        logAIStep('Compose Q&A: Error', e?.message || e)
       } finally {
         // Always re-enable the button
         const composeBtn = $('compose')
@@ -2508,15 +2456,6 @@ Validation result: ${paramsValid}`
         credit.style.color = 'rgba(255,255,255,0.6)'
       }
     }
-    // Clear AI debug panel
-    (function(){
-      try {
-        const btn = document.getElementById('clearAiDebug')
-        if (btn) {
-          btn.onclick = () => { const c = document.getElementById('aiDebugContent'); if (c) c.textContent = '' }
-        }
-      } catch(_) {}
-    })()
     
     function preserveContentDuringThemeSwitch() {
       // Ensure all content elements remain visible and properly styled

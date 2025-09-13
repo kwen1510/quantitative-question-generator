@@ -5,7 +5,14 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js --watch server.js --watch public --ext js,html,css",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test-runner.js",
+    "test:unit": "node test-runner.js --suite=unit",
+    "test:api": "node test-runner.js --suite=api",
+    "test:database": "node test-runner.js --suite=database",
+    "test:e2e": "node test-runner.js --suite=e2e",
+    "test:mock": "node test-runner.js --mock",
+    "test:verbose": "node test-runner.js --verbose"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

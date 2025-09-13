@@ -1606,7 +1606,7 @@ app.post('/api/compose-qa', async (req, res) => {
   console.log('📊 Request body keys:', Object.keys(req.body))
   console.log('🔍 questionId from body:', req.body?.questionId)
   try {
-    const { question, subjectRules, questionRules, runs, n, model } = req.body
+    const { question, workedSolution, code, subjectRules, questionRules, runs, n, model } = req.body
     
     if (!runs || !runs.length) {
       return res.status(400).json({ error: 'runs array required' })
@@ -1615,9 +1615,10 @@ app.post('/api/compose-qa', async (req, res) => {
     const count = Math.min(n || runs.length, runs.length)
     const selectedRuns = runs.slice(0, count)
 
-    const runsData = selectedRuns.map((run, i) => 
-      `Run ${i + 1}: ${JSON.stringify(run.params)} → Final: ${run.final}`
-    ).join('\n')
+    const runsData = selectedRuns.map((run, i) => {
+      const logs = String(run.logs || '').slice(0, 2000)
+      return `Run ${i + 1}: ${JSON.stringify(run.params)} → Final: ${run.final}\nLogs (truncated):\n${logs}`
+    }).join('\n\n')
 
     const qaPrompt = `Generate ${count} different exam questions and answers based on these calculation runs.
 
@@ -1626,6 +1627,13 @@ CRITICAL DATA USAGE RULES:
 - You MUST ensure the final answer matches the "Final" value from that run
 - Do NOT create new numbers - use only the provided parameter values
 - The worked solution should show how the provided parameters lead to the provided final answer
+
+ADDITIONAL CONTEXT TO STRICTLY FOLLOW:
+- VERIFIED CALCULATION CODE (reference this logic; do not invent a new method):
+\n\n--- BEGIN CODE ---\n\n${String(code || '').slice(0, 12000)}\n\n--- END CODE ---\n\n
+- AUTHORITATIVE WORKED SOLUTION STYLE (mirror structure and phrasing closely; adapt numbers per run but keep phrasing style):
+\n\n--- BEGIN WORKED SOLUTION ---\n\n${String(workedSolution || '').slice(0, 8000)}\n\n--- END WORKED SOLUTION ---\n\n
+- CONSOLE-LOGGED RUN ANSWERS (final numeric targets for each run): already embedded below with each run as "Final".
 
 EXAMPLE: If Run 1 shows: {"mass_mixture": 3.4, "volume_HCl_cm3": 45.2, "conc_HCl": 1.14, "vol_NaOH_cm3": 23.58} → Final: 45.3
 Then Question 1 MUST use: "3.4 g mixture", "45.2 cm³ of 1.14 mol dm⁻³ HCl", "23.58 cm³ of NaOH", and result in 45.3%
@@ -1641,8 +1649,8 @@ REQUIREMENTS (FORMAT STRICTNESS):
 1. Use the EXACT numerical values from each run
 2. Create different contexts/scenarios for each question
 3. Keep the same calculation principle and method from the original question
-4. VARY the wording, phrasing, and presentation style substantially between questions. Some variability is expected.
-5. Use different introductory phrases, question structures, and terminology while maintaining scientific accuracy
+4. QUESTION TEXT: Adjust wording/context for variability; ensure logical sense and scientific accuracy; do not change the underlying calculation method.
+5. WORKED SOLUTION TEXT: Follow the authoritative worked solution’s structure and step order closely; reuse phrasing; adapt only numbers/units; do not invent new methods or steps
 6. Follow the subject rules for unit notation and formatting exactly
 7. Include complete worked solutions with proper notation
 8. Each question should use a different run's values
@@ -1664,7 +1672,7 @@ ROUNDING / SYMBOLS / NEWLINES:
 - Final numeric answers must follow the significant figure rules in SUBJECT RULES (intermediate 5 s.f., final 3 s.f.).
 - To preserve layout, use explicit newline characters ("\n") between steps and paragraphs. Do NOT embed HTML tags; just use plain text with numbered steps.
 
-WORKED SOLUTION STYLE GUIDE (MIRROR THIS STRUCTURE CLOSELY):
+WORKED SOLUTION STYLE GUIDE (MIRROR THIS STRUCTURE CLOSELY FROM THE AUTHORITATIVE WORKED SOLUTION ABOVE):
 1. Start with "Data provided:" followed by bullet-like lines (each on a new line)
 2. Numbered steps (1., 2., 3., ...) that mirror the logic of the authoritative solution
 3. Show intermediate calculations with units; keep intermediate values to 5 s.f., final to 3 s.f.
