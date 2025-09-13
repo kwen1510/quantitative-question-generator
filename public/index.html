@@ -607,13 +607,13 @@
       <label>Question Generation Model:</label>
       <div class="model-selector">
         <label class="radio-option">
-          <input type="radio" name="qaModel" value="groq">
+          <input type="radio" name="qaModel" value="groq" checked>
           <span class="radio-custom"></span>
           <span class="radio-label">Groq (openai/gpt-oss-120b)</span>
           <span class="model-badge fast">Fast</span>
         </label>
         <label class="radio-option">
-          <input type="radio" name="qaModel" value="gpt-4.1-mini" checked>
+          <input type="radio" name="qaModel" value="gpt-4.1-mini">
           <span class="radio-custom"></span>
           <span class="radio-label">OpenAI (gpt-4.1-mini)</span>
           <span class="model-badge quality">High Quality</span>
@@ -2182,6 +2182,13 @@ Validation result: ${paramsValid}`
             .replace(/m\^(\d)/g, 'm<sup>$1</sup>')
             .replace(/dm\^-(\d+)/g, 'dm<sup>-$1</sup>')
             .replace(/m\^-(\d+)/g, 'm<sup>-$1</sup>')
+            // ionic charge formatting like Mg^2+, CO3^2-, Ba^2+
+            .replace(/([A-Za-z]{1,3})\^(\d)([+-])/g, '$1<sup>$2$3</sup>')
+            .replace(/(CO|SO|NO|PO|HCO|NH)\s*3\^(\d)([+-])/g, 'CO<sub>3</sub><sup>$2$3</sup>')
+            .replace(/CO\s*3/g, 'CO<sub>3</sub>')
+            .replace(/SO\s*4/g, 'SO<sub>4</sub>')
+            .replace(/NO\s*3/g, 'NO<sub>3</sub>')
+            .replace(/PO\s*4/g, 'PO<sub>4</sub>')
             .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
             .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
             // unicode superscripts and subscripts

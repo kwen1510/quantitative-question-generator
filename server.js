@@ -1635,9 +1635,6 @@ ADDITIONAL CONTEXT TO STRICTLY FOLLOW:
 \n\n--- BEGIN WORKED SOLUTION ---\n\n${String(workedSolution || '').slice(0, 8000)}\n\n--- END WORKED SOLUTION ---\n\n
 - CONSOLE-LOGGED RUN ANSWERS (final numeric targets for each run): already embedded below with each run as "Final".
 
-EXAMPLE: If Run 1 shows: {"mass_mixture": 3.4, "volume_HCl_cm3": 45.2, "conc_HCl": 1.14, "vol_NaOH_cm3": 23.58} → Final: 45.3
-Then Question 1 MUST use: "3.4 g mixture", "45.2 cm³ of 1.14 mol dm⁻³ HCl", "23.58 cm³ of NaOH", and result in 45.3%
-
 BASE QUESTION: ${question}
 SUBJECT RULES (MUST FOLLOW): ${subjectRules}
 QUESTION RULES (MUST FOLLOW): ${questionRules}
@@ -1649,13 +1646,13 @@ REQUIREMENTS (FORMAT STRICTNESS):
 1. Use the EXACT numerical values from each run
 2. Create different contexts/scenarios for each question
 3. Keep the same calculation principle and method from the original question
-4. QUESTION TEXT: Adjust wording/context for variability; ensure logical sense and scientific accuracy; do not change the underlying calculation method.
-5. WORKED SOLUTION TEXT: Follow the authoritative worked solution’s structure and step order closely; reuse phrasing; adapt only numbers/units; do not invent new methods or steps
+4. QUESTION TEXT: Adjust wording/context for variability; ensure logical sense and scientific accuracy; do not change the underlying calculation method; SINGLE PARAGRAPH ≤ 60 words.
+5. WORKED SOLUTION TEXT: Reuse the authoritative worked solution verbatim — keep wording, punctuation, casing, and line breaks EXACTLY; only substitute numeric literals (and directly dependent units/symbols) to reflect the run; DO NOT add headings or extra lines that are not in the authoritative text; NO commentary.
 6. Follow the subject rules for unit notation and formatting exactly
 7. Include complete worked solutions with proper notation
 8. Each question should use a different run's values
 9. Maintain consistent formatting according to subject rules throughout
-10. Make each question feel like it comes from a different textbook or exam board
+10. Do NOT add any lines beyond those required by the template below
 
 OUTPUT FORMAT (STRICT JSON ONLY):
 { "items": [ { "question": string, "workedSolution": string } ] }
@@ -1672,11 +1669,10 @@ ROUNDING / SYMBOLS / NEWLINES:
 - Final numeric answers must follow the significant figure rules in SUBJECT RULES (intermediate 5 s.f., final 3 s.f.).
 - To preserve layout, use explicit newline characters ("\n") between steps and paragraphs. Do NOT embed HTML tags; just use plain text with numbered steps.
 
-WORKED SOLUTION STYLE GUIDE (MIRROR THIS STRUCTURE CLOSELY FROM THE AUTHORITATIVE WORKED SOLUTION ABOVE):
-1. Start with "Data provided:" followed by bullet-like lines (each on a new line)
-2. Numbered steps (1., 2., 3., ...) that mirror the logic of the authoritative solution
-3. Show intermediate calculations with units; keep intermediate values to 5 s.f., final to 3 s.f.
-4. Close with a final line starting with "Answer:" that states the result and unit/percentage
+VERBATIM MATCHING RULES FOR workedSolution:
+- Treat the authoritative worked solution above as the canonical text.
+- Minimize edit distance: only replace numeric literals (and directly dependent units/symbols) with values implied by the run and code; keep all other tokens identical.
+- Preserve original line breaks and ordering; do NOT add section headers, bullets, or introductory lines that are not present in the authoritative text.
 
 Generate exactly ${count} items.`
 
@@ -1727,7 +1723,7 @@ Generate exactly ${count} items.`
       model: selectedModel,
       max_tokens: useGroq ? 8192 : 4000,
       response_format: useGroq ? null : qaSchema,
-      temperature: useGroq ? 1 : 0.7,
+      temperature: useGroq ? 0.0 : 0.0,
       stream: false, // Disable streaming for structured JSON output
       userId: req.user.id,
       sessionId: req.sessionId,
