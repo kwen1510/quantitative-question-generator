@@ -401,44 +401,21 @@
       opacity: 0.7 !important;
     }
 
-    /* Yellow glow effect for New button */
-    .btn-glow {
-      position: relative;
-      animation: pulse-glow 2s infinite;
+    /* Yellow outline effect for buttons */
+    .btn-highlight {
+      border: 2px solid #fbbf24 !important;
+      box-shadow: 0 0 0 1px #fbbf24;
+      animation: subtle-pulse 3s infinite;
     }
 
-    @keyframes pulse-glow {
-      0% {
-        box-shadow: 0 0 5px #fbbf24, 0 0 10px #fbbf24, 0 0 15px #fbbf24;
-      }
-      50% {
-        box-shadow: 0 0 8px #fbbf24, 0 0 16px #fbbf24, 0 0 24px #fbbf24;
-      }
-      100% {
-        box-shadow: 0 0 5px #fbbf24, 0 0 10px #fbbf24, 0 0 15px #fbbf24;
-      }
-    }
-
-    .btn-glow::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, #fbbf24, #f59e0b);
-      border-radius: 12px;
-      z-index: -1;
-      opacity: 0.3;
-      animation: pulse-border 2s infinite;
-    }
-
-    @keyframes pulse-border {
+    @keyframes subtle-pulse {
       0%, 100% {
-        opacity: 0.3;
+        border-color: #fbbf24;
+        box-shadow: 0 0 0 1px #fbbf24;
       }
       50% {
-        opacity: 0.6;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 1px #f59e0b;
       }
     }
     
@@ -656,7 +633,7 @@
     <div class="toolbar" style="margin-top:8px;">
       <button id="saveQuestion" class="btn secondary">Save to DB</button>
       <button id="saveCopy" class="btn secondary">Save as Copy</button>
-      <button id="newQuestion" class="btn secondary">New</button>
+      <button id="newQuestion" class="btn secondary">New Question</button>
       <button id="deleteQuestion" class="btn secondary" style="margin-left:auto;">Delete</button>
     </div>
   </div>
@@ -915,24 +892,94 @@
           if (id === 'ws') field.placeholder = 'Enter the step-by-step worked solution...'
         }
       })
-      removeNewButtonGlow()
+      removeNewButtonHighlight()
       console.log('🔓 Form fields unlocked')
     }
 
-    function addNewButtonGlow() {
+    function addNewButtonHighlight() {
       const newBtn = $('newQuestion')
-      if (newBtn && !newBtn.classList.contains('btn-glow')) {
-        newBtn.classList.add('btn-glow')
-        console.log('✨ Added glow to New button')
+      if (newBtn && !newBtn.classList.contains('btn-highlight')) {
+        newBtn.classList.add('btn-highlight')
+        console.log('✨ Added highlight to New button')
       }
     }
 
-    function removeNewButtonGlow() {
+    function removeNewButtonHighlight() {
       const newBtn = $('newQuestion')
-      if (newBtn && newBtn.classList.contains('btn-glow')) {
-        newBtn.classList.remove('btn-glow')
-        console.log('🔘 Removed glow from New button')
+      if (newBtn && newBtn.classList.contains('btn-highlight')) {
+        newBtn.classList.remove('btn-highlight')
+        console.log('🔘 Removed highlight from New button')
       }
+    }
+
+    function addNewSubjectHighlight() {
+      const newSubjectBtn = $('newSubjectBtn')
+      if (newSubjectBtn && !newSubjectBtn.classList.contains('btn-highlight')) {
+        newSubjectBtn.classList.add('btn-highlight')
+        console.log('✨ Added highlight to New Subject button')
+      }
+    }
+
+    function removeNewSubjectHighlight() {
+      const newSubjectBtn = $('newSubjectBtn')
+      if (newSubjectBtn && newSubjectBtn.classList.contains('btn-highlight')) {
+        newSubjectBtn.classList.remove('btn-highlight')
+        console.log('🔘 Removed highlight from New Subject button')
+      }
+    }
+
+    function addSubjectDropdownHighlight() {
+      const subjectSelect = $('subjectSelect')
+      if (subjectSelect && !subjectSelect.classList.contains('btn-highlight')) {
+        subjectSelect.classList.add('btn-highlight')
+        console.log('✨ Added highlight to Subject dropdown')
+      }
+    }
+
+    function removeSubjectDropdownHighlight() {
+      const subjectSelect = $('subjectSelect')
+      if (subjectSelect && subjectSelect.classList.contains('btn-highlight')) {
+        subjectSelect.classList.remove('btn-highlight')
+        console.log('🔘 Removed highlight from Subject dropdown')
+      }
+    }
+
+    function addQuestionDropdownHighlight() {
+      const questionSelect = $('questionSelect')
+      if (questionSelect && !questionSelect.classList.contains('btn-highlight')) {
+        questionSelect.classList.add('btn-highlight')
+        console.log('✨ Added highlight to Question dropdown')
+      }
+    }
+
+    function removeQuestionDropdownHighlight() {
+      const questionSelect = $('questionSelect')
+      if (questionSelect && questionSelect.classList.contains('btn-highlight')) {
+        questionSelect.classList.remove('btn-highlight')
+        console.log('🔘 Removed highlight from Question dropdown')
+      }
+    }
+
+    function disableAllButtonsExceptNewSubject() {
+      const buttons = ['saveQuestion', 'saveCopy', 'newQuestion', 'deleteQuestion', 'deleteSubjectBtn']
+      buttons.forEach(id => {
+        const btn = $(id)
+        if (btn) {
+          btn.disabled = true
+        }
+      })
+      console.log('🔒 Disabled all buttons except New Subject')
+    }
+
+    function enableAllButtons() {
+      const buttons = ['saveQuestion', 'saveCopy', 'newQuestion', 'deleteQuestion', 'deleteSubjectBtn']
+      buttons.forEach(id => {
+        const btn = $(id)
+        if (btn) {
+          btn.disabled = false
+        }
+      })
+      console.log('🔓 Enabled all buttons')
     }
     
     // Load subjects and populate dropdown
@@ -986,9 +1033,10 @@
         // Don't auto-select anything - wait for user choice
         clearAllFields()
 
-        // Lock form fields and add glow to New button initially
+        // Initial state: highlight Subject dropdown to guide user
+        addSubjectDropdownHighlight()
+        disableAllButtonsExceptNewSubject()
         lockFormFields()
-        addNewButtonGlow()
 
         // Hide loading overlay once data is loaded
         hideLoadingOverlay()
@@ -1011,17 +1059,33 @@
       }
 
       if (!subjectId) {
-        // No subject selected - clear everything
+        // No subject selected - highlight subject dropdown
         CURRENT_SUBJECT = null
         clearAllFields()
+        addSubjectDropdownHighlight()
+        removeNewSubjectHighlight()
+        disableAllButtonsExceptNewSubject()
         return
       }
+
+      // Subject is selected - remove subject dropdown highlight, enable buttons
+      removeSubjectDropdownHighlight()
+      removeNewSubjectHighlight()
+      enableAllButtons()
 
       CURRENT_SUBJECT = SUBJECTS_LIST.find(s => s.id === subjectId)
       if (CURRENT_SUBJECT) {
         $('sr').value = CURRENT_SUBJECT.subjectRules || ''
         console.log(`📁 Selected subject: ${CURRENT_SUBJECT.displayName}`)
         await refreshQuestions(subjectId)
+
+        // After loading questions, highlight question dropdown AND New Question button
+        const questionSelected = $('questionSelect').value
+        if (!questionSelected) {
+          lockFormFields()
+          addQuestionDropdownHighlight()
+          addNewButtonHighlight()
+        }
       }
     }
 
@@ -1078,6 +1142,12 @@
         console.warn(`Question with ID ${selected} not found in DB.`)
         return clearFields()
       }
+
+      // Remove all highlights when question is selected
+      removeQuestionDropdownHighlight()
+      removeNewButtonHighlight()
+      removeSubjectDropdownHighlight()
+      removeNewSubjectHighlight()
 
       // Unlock form fields when a question is selected
       unlockFormFields()
@@ -1152,9 +1222,11 @@
       updateWorkflowStep(1)
       updateSaveButtonVisibility()
 
-      // Lock form fields and show glow when no question is selected
-      lockFormFields()
-      addNewButtonGlow()
+      // Lock form fields and show highlight when no question is selected (but subject exists)
+      if (CURRENT_SUBJECT) {
+        lockFormFields()
+        addNewButtonHighlight()
+      }
     }
 
     function clearAllFields() {
@@ -1182,9 +1254,13 @@
       updateWorkflowStep(1)
       updateSaveButtonVisibility()
 
-      // Lock form fields and show glow when everything is cleared
+      // When everything is cleared, highlight subject dropdown and New Subject button
       lockFormFields()
-      addNewButtonGlow()
+      addSubjectDropdownHighlight()
+      addNewSubjectHighlight()
+      disableAllButtonsExceptNewSubject()
+      removeNewButtonHighlight()
+      removeQuestionDropdownHighlight()
     }
 
     // Workflow Progress Management
@@ -1723,6 +1799,12 @@
       } catch (_) {}
     }
     document.getElementById('newQuestion').onclick = async () => {
+      // Remove all highlights when New Question is clicked
+      removeQuestionDropdownHighlight()
+      removeNewButtonHighlight()
+      removeSubjectDropdownHighlight()
+      removeNewSubjectHighlight()
+
       // Unlock form fields when New is clicked
       unlockFormFields()
 
@@ -1746,6 +1828,9 @@
 
     // New Subject Modal handlers
     document.getElementById('newSubjectBtn').onclick = () => {
+      // Remove highlight when New Subject is clicked
+      removeNewSubjectHighlight()
+
       $('newSubjectModal').style.display = 'flex'
       $('subjectName').value = ''
       $('subjectDisplayName').value = ''
@@ -1756,16 +1841,28 @@
 
     document.getElementById('closeSubjectModal').onclick = () => {
       $('newSubjectModal').style.display = 'none'
+      // If no subject is selected, restore the highlight
+      if (!CURRENT_SUBJECT) {
+        addNewSubjectHighlight()
+      }
     }
 
     document.getElementById('cancelSubjectBtn').onclick = () => {
       $('newSubjectModal').style.display = 'none'
+      // If no subject is selected, restore the highlight
+      if (!CURRENT_SUBJECT) {
+        addNewSubjectHighlight()
+      }
     }
 
     // Close modal when clicking outside
     document.getElementById('newSubjectModal').onclick = (e) => {
       if (e.target === $('newSubjectModal')) {
         $('newSubjectModal').style.display = 'none'
+        // If no subject is selected, restore the highlight
+        if (!CURRENT_SUBJECT) {
+          addNewSubjectHighlight()
+        }
       }
     }
 
