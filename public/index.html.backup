@@ -387,60 +387,6 @@
       transform: none !important;
       box-shadow: none !important;
     }
-
-    /* Form field protection styles */
-    textarea:disabled, input:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: var(--border) !important;
-      color: var(--muted) !important;
-    }
-
-    textarea:disabled::placeholder, input:disabled::placeholder {
-      color: var(--muted) !important;
-      opacity: 0.7 !important;
-    }
-
-    /* Yellow glow effect for New button */
-    .btn-glow {
-      position: relative;
-      animation: pulse-glow 2s infinite;
-    }
-
-    @keyframes pulse-glow {
-      0% {
-        box-shadow: 0 0 5px #fbbf24, 0 0 10px #fbbf24, 0 0 15px #fbbf24;
-      }
-      50% {
-        box-shadow: 0 0 8px #fbbf24, 0 0 16px #fbbf24, 0 0 24px #fbbf24;
-      }
-      100% {
-        box-shadow: 0 0 5px #fbbf24, 0 0 10px #fbbf24, 0 0 15px #fbbf24;
-      }
-    }
-
-    .btn-glow::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, #fbbf24, #f59e0b);
-      border-radius: 12px;
-      z-index: -1;
-      opacity: 0.3;
-      animation: pulse-border 2s infinite;
-    }
-
-    @keyframes pulse-border {
-      0%, 100% {
-        opacity: 0.3;
-      }
-      50% {
-        opacity: 0.6;
-      }
-    }
     
     /* Section spacing improvements */
     .question-section { margin-bottom: 24px; }
@@ -518,98 +464,10 @@
       border-radius: 50%; 
       animation: spin 1s linear infinite; 
     }
-    .loading-text {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    /* Modal styles */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10001;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    [data-theme="light"] .modal {
-      background: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-content {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      max-width: 600px;
-      width: 100%;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .modal-header h3 {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 4px;
-      line-height: 1;
-    }
-
-    .modal-close:hover {
-      color: var(--text);
-    }
-
-    .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .modal-footer {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      padding: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      margin-bottom: 8px;
-    }
-
-    .form-group .caption {
-      margin-top: 4px;
-      font-size: 12px;
-      color: var(--muted);
+    .loading-text { 
+      font-size: 16px; 
+      font-weight: 500; 
+      color: var(--text); 
     }
   </style>
 </head>
@@ -642,11 +500,7 @@
   <div class="row">
     <div class="col">
         <label>Subject:</label>
-        <div style="display: flex; gap: 8px; align-items: end;">
-          <select id="subjectSelect" onchange="onSubjectChange()" style="flex: 1;"></select>
-          <button id="newSubjectBtn" class="btn secondary" style="white-space: nowrap;">New Subject</button>
-          <button id="deleteSubjectBtn" class="btn secondary" style="white-space: nowrap; background: #dc2626; border-color: #dc2626; display: none;" title="Delete selected subject">🗑️</button>
-        </div>
+        <select id="subjectSelect" onchange="onSubjectChange()"></select>
       </div>
       <div class="col">
         <label>Select Question:</label>
@@ -749,7 +603,7 @@
       <input id="num" type="range" value="3" min="1" max="10" oninput="document.getElementById('numDisplay').textContent = this.value" />
       <div class="caption">Drag to choose how many variations you want.</div>
     </div>
-    <div class="col slider-section" style="display:none;">
+    <div class="col slider-section">
       <label>Question Generation Model:</label>
       <div class="model-selector">
         <label class="radio-option">
@@ -817,59 +671,6 @@
     </div>
   </details>
 
-  <!-- AI Debug Panel (you can set display:none when done testing) -->
-  <div id="aiDebugPanel" class="card" style="display:none; margin-top:20px; padding:12px;">
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-      <h4 style="margin:0;">AI Debug Output</h4>
-      <button id="clearAiDebug" class="btn secondary" style="margin-left:auto; padding:6px 10px; font-size:12px;">Clear</button>
-    </div>
-    <pre id="aiDebugContent" style="white-space:pre-wrap; max-height:260px; overflow:auto;"></pre>
-  </div>
-
-  <!-- New Subject Modal -->
-  <div id="newSubjectModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 style="margin: 0;">Create New Subject</h3>
-        <button id="closeSubjectModal" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="newSubjectForm">
-          <div class="form-group">
-            <label for="subjectName">Subject Name (internal identifier):</label>
-            <input type="text" id="subjectName" required placeholder="e.g., advanced_chemistry">
-            <div class="caption">Unique identifier - use lowercase letters, numbers, and underscores only</div>
-          </div>
-
-          <div class="form-group">
-            <label for="subjectDisplayName">Display Name:</label>
-            <input type="text" id="subjectDisplayName" required placeholder="e.g., Advanced Chemistry">
-            <div class="caption">Human-readable name shown in dropdowns</div>
-          </div>
-
-          <div class="form-group">
-            <label for="subjectDescription">Description (optional):</label>
-            <textarea id="subjectDescription" rows="3" placeholder="Brief description of this subject area..."></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="subjectRules">Subject Rules:</label>
-            <textarea id="subjectRules" rows="8" required placeholder="Enter the rules and constraints for this subject, e.g.:
-- Use 5 significant figures for intermediate calculations
-- Use 3 significant figures for final answers
-- Include proper unit notation
-- Follow scientific notation conventions"></textarea>
-            <div class="caption">These rules will be applied to all questions in this subject</div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="cancelSubjectBtn" class="btn secondary">Cancel</button>
-        <button type="submit" id="createSubjectBtn" class="btn primary" form="newSubjectForm">Create Subject</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     const $ = (id) => document.getElementById(id)
     let SUPABASE_URL = ''
@@ -884,56 +685,6 @@
     let DEV_MODE = false
     
     // Removed hardcoded questions; list will be loaded from DB
-
-    // Form field locking/unlocking functions
-    function lockFormFields() {
-      const fields = ['qr', 'questionTitle', 'q', 'ws']
-      fields.forEach(id => {
-        const field = $(id)
-        if (field) {
-          field.disabled = true
-          // Update placeholders to guide user
-          if (id === 'qr') field.placeholder = 'Select a question or click "New" to enter question-specific rules...'
-          if (id === 'questionTitle') field.placeholder = 'Select a question or click "New" to enter a title...'
-          if (id === 'q') field.placeholder = 'Select a question or click "New" to enter your question...'
-          if (id === 'ws') field.placeholder = 'Select a question or click "New" to enter the worked solution...'
-        }
-      })
-      console.log('🔒 Form fields locked')
-    }
-
-    function unlockFormFields() {
-      const fields = ['qr', 'questionTitle', 'q', 'ws']
-      fields.forEach(id => {
-        const field = $(id)
-        if (field) {
-          field.disabled = false
-          // Restore original placeholders
-          if (id === 'qr') field.placeholder = 'Enter question-specific rules and constraints...'
-          if (id === 'questionTitle') field.placeholder = 'Enter a descriptive title for this question...'
-          if (id === 'q') field.placeholder = 'Enter your question here...'
-          if (id === 'ws') field.placeholder = 'Enter the step-by-step worked solution...'
-        }
-      })
-      removeNewButtonGlow()
-      console.log('🔓 Form fields unlocked')
-    }
-
-    function addNewButtonGlow() {
-      const newBtn = $('newQuestion')
-      if (newBtn && !newBtn.classList.contains('btn-glow')) {
-        newBtn.classList.add('btn-glow')
-        console.log('✨ Added glow to New button')
-      }
-    }
-
-    function removeNewButtonGlow() {
-      const newBtn = $('newQuestion')
-      if (newBtn && newBtn.classList.contains('btn-glow')) {
-        newBtn.classList.remove('btn-glow')
-        console.log('🔘 Removed glow from New button')
-      }
-    }
     
     // Load subjects and populate dropdown
     async function refreshSubjects() {
@@ -985,11 +736,7 @@
         
         // Don't auto-select anything - wait for user choice
         clearAllFields()
-
-        // Lock form fields and add glow to New button initially
-        lockFormFields()
-        addNewButtonGlow()
-
+        
         // Hide loading overlay once data is loaded
         hideLoadingOverlay()
       } catch (e) {
@@ -1001,22 +748,14 @@
     // When subject changes, load questions for that subject and populate subject rules
     async function onSubjectChange() {
       const subjectId = $('subjectSelect').value
-
-      // Show/hide delete button based on selection
-      const deleteBtn = $('deleteSubjectBtn')
-      if (subjectId && subjectId !== '') {
-        deleteBtn.style.display = 'block'
-      } else {
-        deleteBtn.style.display = 'none'
-      }
-
+      
       if (!subjectId) {
         // No subject selected - clear everything
         CURRENT_SUBJECT = null
         clearAllFields()
         return
       }
-
+      
       CURRENT_SUBJECT = SUBJECTS_LIST.find(s => s.id === subjectId)
       if (CURRENT_SUBJECT) {
         $('sr').value = CURRENT_SUBJECT.subjectRules || ''
@@ -1078,10 +817,6 @@
         console.warn(`Question with ID ${selected} not found in DB.`)
         return clearFields()
       }
-
-      // Unlock form fields when a question is selected
-      unlockFormFields()
-
       CURRENT_ID = data.id
       console.log('📋 Setting CURRENT_ID to:', CURRENT_ID, 'for question:', data.title)
       $('questionTitle').value = data.title || ''
@@ -1151,10 +886,6 @@
       setStatus('Ready for new question', false)
       updateWorkflowStep(1)
       updateSaveButtonVisibility()
-
-      // Lock form fields and show glow when no question is selected
-      lockFormFields()
-      addNewButtonGlow()
     }
 
     function clearAllFields() {
@@ -1167,7 +898,7 @@
       $('qr').value = ''
       $('code').textContent = ''
       $('verdict').textContent = ''
-
+      
       // Clear question dropdown
       const questionSel = $('questionSelect')
       questionSel.innerHTML = ''
@@ -1177,14 +908,10 @@
       defaultOpt.disabled = true
       defaultOpt.selected = true
       questionSel.appendChild(defaultOpt)
-
+      
       setStatus('Select a subject to begin', false)
       updateWorkflowStep(1)
       updateSaveButtonVisibility()
-
-      // Lock form fields and show glow when everything is cleared
-      lockFormFields()
-      addNewButtonGlow()
     }
 
     // Workflow Progress Management
@@ -1538,27 +1265,6 @@
       return r.json()
     }
     
-    // Debug logger shown at bottom of the page
-    function logAIStep(step, payload) {
-      try {
-        const container = $('aiDebugContent')
-        if (!container) return
-        const ts = new Date().toLocaleTimeString()
-        const toStringSafe = (v) => {
-          if (v == null) return ''
-          if (typeof v === 'string') return v
-          try { return JSON.stringify(v, null, 2) } catch(_) { return String(v) }
-        }
-        const escape = (s) => String(s || '')
-          .replace(/&/g,'&amp;')
-          .replace(/</g,'&lt;')
-          .replace(/>/g,'&gt;')
-        const block = '[' + ts + '] ' + step + '\n' + escape(toStringSafe(payload)) + '\n' + '-'.repeat(50)
-        container.textContent += (container.textContent ? '\n' : '') + block
-        container.scrollTop = container.scrollHeight
-      } catch (_) {}
-    }
-    
     // Dev mode detection: ?dev=1 or Shift+D toggle
     function detectDevModeFromQuery() {
       try { const u = new URL(window.location.href); return u.searchParams.get('dev') === '1' } catch(_) { return false }
@@ -1723,9 +1429,6 @@
       } catch (_) {}
     }
     document.getElementById('newQuestion').onclick = async () => {
-      // Unlock form fields when New is clicked
-      unlockFormFields()
-
       CURRENT_ID = null
       $('questionTitle').value = ''
       $('q').value = ''
@@ -1742,161 +1445,6 @@
     document.getElementById('deleteQuestion').onclick = async () => {
       try { if (!CURRENT_ID) { alert('No question selected'); return } if (!confirm('Delete this question?')) return; setStatus('Deleting...', true); await deleteCurrentQuestion(); setStatus('Deleted ✓', false) }
       catch(e){ alert(e.message||e); setStatus('Error', false) }
-    }
-
-    // New Subject Modal handlers
-    document.getElementById('newSubjectBtn').onclick = () => {
-      $('newSubjectModal').style.display = 'flex'
-      $('subjectName').value = ''
-      $('subjectDisplayName').value = ''
-      $('subjectDescription').value = ''
-      $('subjectRules').value = ''
-      $('subjectName').focus()
-    }
-
-    document.getElementById('closeSubjectModal').onclick = () => {
-      $('newSubjectModal').style.display = 'none'
-    }
-
-    document.getElementById('cancelSubjectBtn').onclick = () => {
-      $('newSubjectModal').style.display = 'none'
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('newSubjectModal').onclick = (e) => {
-      if (e.target === $('newSubjectModal')) {
-        $('newSubjectModal').style.display = 'none'
-      }
-    }
-
-    // Delete Subject handler
-    document.getElementById('deleteSubjectBtn').onclick = async () => {
-      try {
-        const selectedSubjectId = $('subjectSelect').value
-        if (!selectedSubjectId) {
-          alert('Please select a subject to delete')
-          return
-        }
-
-        const selectedSubject = SUBJECTS_LIST.find(s => s.id === selectedSubjectId)
-        if (!selectedSubject) {
-          alert('Selected subject not found')
-          return
-        }
-
-        // Confirmation dialog with clear warning
-        const confirmMessage = `Are you sure you want to delete the subject "${selectedSubject.displayName || selectedSubject.name}"?\n\nThis action cannot be undone. If there are questions using this subject, you'll need to delete them first.`
-        if (!confirm(confirmMessage)) {
-          return
-        }
-
-        // Disable delete button to prevent double-clicks
-        const deleteBtn = $('deleteSubjectBtn')
-        const originalText = deleteBtn.innerHTML
-        deleteBtn.disabled = true
-        deleteBtn.innerHTML = '⏳'
-
-        // Send DELETE request
-        const headers = {}
-        const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
-        if (token) headers['Authorization'] = 'Bearer ' + token
-
-        const response = await fetch(`/api/subjects/${selectedSubjectId}`, {
-          method: 'DELETE',
-          headers
-        })
-
-        const result = await response.json()
-
-        if (!result.ok) {
-          throw new Error(result.error || 'Failed to delete subject')
-        }
-
-        // Success! Show toast and refresh subjects
-        toast('Subject deleted successfully', 'success')
-
-        // Refresh subjects list and clear current selection
-        await refreshSubjects()
-        clearAllFields() // This will reset the UI to initial state
-
-      } catch (error) {
-        console.error('Error deleting subject:', error)
-        alert('Error deleting subject: ' + (error.message || error))
-      } finally {
-        // Re-enable delete button
-        const deleteBtn = $('deleteSubjectBtn')
-        deleteBtn.disabled = false
-        deleteBtn.innerHTML = '🗑️'
-      }
-    }
-
-    // Handle new subject form submission
-    document.getElementById('newSubjectForm').onsubmit = async (e) => {
-      e.preventDefault()
-
-      try {
-        const name = $('subjectName').value.trim()
-        const displayName = $('subjectDisplayName').value.trim()
-        const description = $('subjectDescription').value.trim()
-        const subjectRules = $('subjectRules').value.trim()
-
-        // Validate subject name format
-        if (!/^[a-z0-9_]+$/.test(name)) {
-          alert('Subject name must contain only lowercase letters, numbers, and underscores')
-          return
-        }
-
-        if (!name || !displayName || !subjectRules) {
-          alert('Please fill in all required fields')
-          return
-        }
-
-        // Disable create button to prevent double-clicks
-        const createBtn = $('createSubjectBtn')
-        const originalText = createBtn.textContent
-        createBtn.disabled = true
-        createBtn.textContent = 'Creating...'
-
-        // Send API request
-        const headers = { 'Content-Type': 'application/json' }
-        const token = session?.access_token || session?.accessToken || (session?.user?.access_token)
-        if (token) headers['Authorization'] = 'Bearer ' + token
-
-        const response = await fetch('/api/subjects', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            name,
-            displayName,
-            description,
-            subjectRules
-          })
-        })
-
-        const result = await response.json()
-
-        if (!result.ok) {
-          throw new Error(result.error || 'Failed to create subject')
-        }
-
-        // Success! Close modal and refresh subjects
-        $('newSubjectModal').style.display = 'none'
-        toast('Subject created successfully!', 'success')
-
-        // Refresh subjects list and auto-select the new subject
-        await refreshSubjects()
-        $('subjectSelect').value = result.item.id
-        await onSubjectChange()
-
-      } catch (error) {
-        console.error('Error creating subject:', error)
-        alert('Error creating subject: ' + (error.message || error))
-      } finally {
-        // Re-enable create button
-        const createBtn = $('createSubjectBtn')
-        createBtn.disabled = false
-        createBtn.textContent = 'Create Subject'
-      }
     }
 
     // UI helpers (setStatus is defined above with auto-clear functionality)
@@ -1959,10 +1507,6 @@
         }
         $('logs').innerHTML = formatSuperscripts(result.logs || '')
         $('verdict').textContent = `Verdict: ${result.verdict}\nReason: ${result.reason}`
-        // Debug panel entries
-        logAIStep('Build & Verify: Generated Code', result.code || '')
-        logAIStep('Build & Verify: Verification Logs', result.logs || '')
-        logAIStep('Build & Verify: Verdict', { verdict: result.verdict, reason: result.reason })
         
         if (result.verdict === 'pass') {
           setStatus('Code verified ✓', false)
@@ -1978,7 +1522,6 @@
         alert('Error: ' + (e.message || e))
         $('code').textContent = 'Error occurred'
         setStatus('Error', false)
-        logAIStep('Build & Verify: Error', e?.message || e)
       }
     }
 
@@ -2016,11 +1559,6 @@
           
           // Store the complete parameterization for later use
           window.PARAMETERIZATION = result.parameterization
-          // Debug panel entries
-          logAIStep('Parameterize: Inputs', inputs)
-          logAIStep('Parameterize: Eval Function', result.parameterization.eval || '')
-          logAIStep('Parameterize: Calculation Code', result.parameterization.calculation || '')
-          logAIStep('Parameterize: Reasons', bullets.join('\n'))
           
           if (inputCount === 0) { setStatus('Parameterization returned no inputs', false); console.error('❌ Empty parameterization inputs:', result.parameterization) }
           else { 
@@ -2033,7 +1571,6 @@
           $('rngOut').textContent = 'Parameterization failed'
           $('evalOut').textContent = result.rawResponse || 'No response'
           setStatus('Parameterization failed', false)
-          logAIStep('Parameterize: Failed Raw Response', result.rawResponse || 'No response')
           
           // Show regenerate button for failed parameterization
           $('regenerateBtn').style.display = 'block'
@@ -2047,7 +1584,6 @@
       } catch(e) { 
         alert('Error: ' + (e.message || e))
         setStatus('Error', false)
-        logAIStep('Parameterize: Error', e?.message || e)
       }
     }
 
@@ -2265,9 +1801,6 @@ Validation result: ${paramsValid}`
           .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
           .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
         $('runs').innerHTML = prettyRuns
-        // Debug panel entries
-        logAIStep('Generate Runs: Summary', { requested: need, generated: runs.length, attempts: maxAttempts })
-        logAIStep('Generate Runs: Runs Data', runs)
         
         if (runs.length >= need) {
           console.log(`✅ Generated ${runs.length} successful variations! Auto-creating final questions...`)
@@ -2300,7 +1833,6 @@ Validation result: ${paramsValid}`
                 $('compose').click()
               }, 1000)
             } else {
-          logAIStep('Generate Runs: Incomplete', 'Not enough valid variations produced')
           // Show regenerate button for failed generation
           $('regenerateBtn').style.display = 'block'
           $('regenerateBtn').onclick = () => {
@@ -2573,8 +2105,6 @@ Validation result: ${paramsValid}`
         
         const result = await post('/api/compose-qa', {
           question: $('q').value,
-          workedSolution: $('ws').value,
-          code: $('code').textContent,
           subjectRules: $('sr').value,
           questionRules: $('qr').value,
           runs: SELECTED_RUNS.slice(0, availableRuns),
@@ -2582,9 +2112,6 @@ Validation result: ${paramsValid}`
           model: selectedModel,
           questionId: CURRENT_ID || null
         })
-        // Debug panel entries
-        logAIStep('Compose Q&A: Model', modelName)
-        logAIStep('Compose Q&A: Result', { count: result?.count, qa: result?.qa })
         
         // Helper: formatting replacements (convert ^ into <sup> where applicable)
         const formatText = (text) => {
@@ -2604,13 +2131,6 @@ Validation result: ${paramsValid}`
             .replace(/m\^(\d)/g, 'm<sup>$1</sup>')
             .replace(/dm\^-(\d+)/g, 'dm<sup>-$1</sup>')
             .replace(/m\^-(\d+)/g, 'm<sup>-$1</sup>')
-            // ionic charge formatting like Mg^2+, CO3^2-, Ba^2+
-            .replace(/([A-Za-z]{1,3})\^(\d)([+-])/g, '$1<sup>$2$3</sup>')
-            .replace(/(CO|SO|NO|PO|HCO|NH)\s*3\^(\d)([+-])/g, 'CO<sub>3</sub><sup>$2$3</sup>')
-            .replace(/CO\s*3/g, 'CO<sub>3</sub>')
-            .replace(/SO\s*4/g, 'SO<sub>4</sub>')
-            .replace(/NO\s*3/g, 'NO<sub>3</sub>')
-            .replace(/PO\s*4/g, 'PO<sub>4</sub>')
             .replace(/10\^-(\d+)/g, '10<sup>-$1</sup>')
             .replace(/10\^(\d+)/g, '10<sup>$1</sup>')
             // unicode superscripts and subscripts
@@ -2829,7 +2349,6 @@ Validation result: ${paramsValid}`
       } catch (e) {
         alert('Error: ' + (e.message || e))
         setStatus('Error', false)
-        logAIStep('Compose Q&A: Error', e?.message || e)
       } finally {
         // Always re-enable the button
         const composeBtn = $('compose')
@@ -2937,15 +2456,6 @@ Validation result: ${paramsValid}`
         credit.style.color = 'rgba(255,255,255,0.6)'
       }
     }
-    // Clear AI debug panel
-    (function(){
-      try {
-        const btn = document.getElementById('clearAiDebug')
-        if (btn) {
-          btn.onclick = () => { const c = document.getElementById('aiDebugContent'); if (c) c.textContent = '' }
-        }
-      } catch(_) {}
-    })()
     
     function preserveContentDuringThemeSwitch() {
       // Ensure all content elements remain visible and properly styled

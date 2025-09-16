@@ -470,6 +470,89 @@ app.get('/api/subjects', async (req, res) => {
   }
 })
 
+app.post('/api/subjects', async (req, res) => {
+  try {
+    const db = await connectDb()
+    const col = db.collection('subjects')
+    const p = req.body || {}
+
+    // Validate required fields
+    if (!p.name || p.name.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Subject name is required' })
+    }
+    if (!p.displayName || p.displayName.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Display name is required' })
+    }
+    if (!p.subjectRules || p.subjectRules.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Subject rules are required' })
+    }
+
+    const subjectDoc = {
+      name: p.name.trim(),
+      displayName: p.displayName.trim(),
+      description: p.description?.trim() || '',
+      subjectRules: p.subjectRules.trim()
+    }
+
+    try {
+      const result = await col.insertOne(subjectDoc)
+      const insertedId = String(result.insertedId)
+
+      res.json({
+        ok: true,
+        item: {
+          id: insertedId,
+          ...subjectDoc
+        }
+      })
+    } catch (insertError) {
+      // Handle duplicate name error (unique index violation)
+      if (insertError.code === 11000) {
+        return res.status(409).json({
+          ok: false,
+          error: 'A subject with this name already exists'
+        })
+      }
+      throw insertError
+    }
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || 'Unknown error' })
+  }
+})
+
+app.delete('/api/subjects/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const db = await connectDb()
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid subject ID' })
+    }
+
+    const subjectId = new ObjectId(id)
+
+    // Check if there are any questions using this subject
+    const questionsUsingSubject = await db.collection('questions').countDocuments({ subjectId })
+    if (questionsUsingSubject > 0) {
+      return res.status(400).json({
+        ok: false,
+        error: `Cannot delete subject: ${questionsUsingSubject} question(s) are using this subject. Delete the questions first.`
+      })
+    }
+
+    // Delete the subject
+    const result = await db.collection('subjects').deleteOne({ _id: subjectId })
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ ok: false, error: 'Subject not found' })
+    }
+
+    res.json({ ok: true, message: 'Subject deleted successfully' })
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || 'Unknown error' })
+  }
+})
+
 // === Questions API (now linked to subjects) ===
 app.get('/api/questions', async (req, res) => {
   try {
